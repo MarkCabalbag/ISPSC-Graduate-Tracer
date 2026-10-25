@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ModalType } from "../../admin/types/types";
+import { ModalType } from "../../types/type";
 import {
   AlertDialog,
   AlertDialogContent,

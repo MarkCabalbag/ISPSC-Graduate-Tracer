@@ -17,3 +17,7 @@ export function getAcronym(department: string): import("react").ReactNode {
     .toUpperCase();
   return acronym;
 }
+
+export const formatData = <T, U>(data: T[], mapFn: (item: T) => U[]): U[] => {
+  return data.flatMap(mapFn);
+};

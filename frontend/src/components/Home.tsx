@@ -1,257 +1,283 @@
-import { motion } from "framer-motion";
-import ispscLogo from "../assets/ispsc.png";
+/**
+ * =============================================================================
+ * Home.tsx: public landing page of the Graduate Tracer System
+ * =============================================================================
+ *
+ * PURPOSE
+ * -------
+ * First page alumni see. It explains the tracer study and sends them to the
+ * survey. It has no props and makes no API calls.
+ *
+ * SECTIONS (top to bottom)
+ * ------------------------
+ *   1. Navigation          Site navigation bar.
+ *   2. Hero                Title, welcome text, "Take Tracer Survey" button and
+ *                          an "Explore Impact" link that scrolls to #impact.
+ *   3. Key metrics (#impact)  Three highlight numbers (see METRICS).
+ *   4. Feature grid        Three reasons to take part (see FEATURES).
+ *   5. Call to action      Second "Start Your Tracer Survey" button.
+ *   6. Footer              Logo, system name and copyright (current year).
+ *
+ * SURVEY FLOW
+ * -----------
+ *   Both survey buttons open the <ProceedToForm /> modal (state:
+ *   `isProceedtoForm`). The modal shows the purpose and data privacy notice.
+ *   When the user ticks the checkbox and presses Proceed, they are sent to
+ *   "/form". To change the texts or the route, edit ./modal/ProceedToForm.
+ *
+ * HOW TO CHANGE THE CONTENT
+ * -------------------------
+ *   - Metrics and feature cards are plain data: edit METRICS / FEATURES below.
+ *   - The metric values ("5,000+", "80%", "50+") are written by hand. They are
+ *     not loaded from the database, so update them when the real numbers change.
+ *
+ * REQUIREMENTS
+ * ------------
+ *   - Must be rendered inside a react-router <Router> (the modal navigates).
+ *   - <Toaster /> is mounted here, because the modal shows an error toast when
+ *     the user has not agreed yet. Do not mount a second one in the same page.
+ *   - Assets: ../assets/ispsc.png, ../assets/ispsc_campus_hero.jpg
+ *   - Tailwind theme color `primary`.
+ *
+ * DEPENDENCIES
+ * ------------
+ *   react, framer-motion, react-hot-toast, lucide-react,
+ *   ./Navigation, ./modal/ProceedToForm, ./ui/button
+ *
+ * @returns The full page as one <div>.
+ * =============================================================================
+ */
+
 import { useState } from "react";
-import ProceedToForm from "./modal/ProceedToForm";
+import { motion } from "framer-motion";
 import { Toaster } from "react-hot-toast";
+import {
+  Award,
+  Briefcase,
+  GraduationCap,
+  Users,
+  ArrowRight,
+  ShieldCheck,
+  Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+import ispscLogo from "../assets/ispsc.png";
+import campusHero from "../assets/ispsc_campus_hero.jpg";
+import Navigation from "./Navigation";
+import ProceedToForm from "./modal/ProceedToForm";
+import { Button } from "./ui/button";
+
+/* -----------------------------------------------------------------------------
+ * Content
+ * ---------------------------------------------------------------------------*/
+
+type Metric = { icon: LucideIcon; value: string; label: string };
+
+/** Numbers shown in the "Key Metrics" bar. Written by hand, not from the API. */
+const METRICS: Metric[] = [
+  { icon: Users, value: "5,000+", label: "Traced Graduates" },
+  { icon: Briefcase, value: "80%", label: "Employment Rate" },
+  { icon: Award, value: "50+", label: "Partner Industries" },
+];
+
+type Feature = { icon: LucideIcon; title: string; description: string };
+
+/** Cards shown in "Why Your Participation Matters". */
+const FEATURES: Feature[] = [
+  {
+    icon: GraduationCap,
+    title: "Share Your Story",
+    description:
+      "Let your career trajectory and professional milestones inspire future generations of ISPSC scholars.",
+  },
+  {
+    icon: Users,
+    title: "Stay Connected",
+    description:
+      "Build robust professional networks, reconnect with batchmates, and discover exclusive alumni mentoring opportunities.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Shape ISPSC's Future",
+    description:
+      "Provide valuable feedback on industry relevance, ensuring our programs remain at the cutting edge of education.",
+  },
+];
+
+/* -----------------------------------------------------------------------------
+ * Page
+ * ---------------------------------------------------------------------------*/
 
 const Home = () => {
-  const containerVariants = {
-    initial: {
-      opacity: 0,
-    },
-    animate: {
-      opacity: 1,
-      transition: {
-        duration: 0.5,
-        when: "beforeChildren",
-        delayChildren: 0.5,
-        staggerChildren: 0.3,
-      },
-    },
-  };
-
-  const childVariants = {
-    initial: {
-      opacity: 0,
-      y: 20,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 1,
-      },
-    },
-  };
-
-  const secondConatinerVariants = {
-    initial: {
-      y: 300,
-      opacity: 0,
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 1,
-        staggerChildren: 0.5,
-      },
-    },
-  };
-
-  const secondChildVariants = {
-    initial: {
-      opacity: 0,
-      y: 20,
-    },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 1,
-      },
-    },
-  };
-
   const [isProceedtoForm, setProceedtoForm] = useState(false);
 
   return (
-    <div>
-      <div className="h-max bg-primary">
-        <motion.div
-          className="pt-20 px-4 md:px-0"
-          variants={containerVariants}
-          initial="initial"
-          animate="animate"
-        >
-          <motion.div>
-            <motion.div className="flex justify-center">
-              <img
-                src={ispscLogo}
-                alt="ispsc logo"
-                className="w-[30%] md:w-[15%] lg:w-[10%]"
-              />
-            </motion.div>
+    <div className="min-h-screen bg-white text-neutral-900 selection:bg-primary/20">
+      <Navigation />
+      <Toaster />
 
-            <motion.h1 className="main-font text-xl md:text-2xl lg:text-3xl mt-5 text-center">
-              ILOCOS SUR POLYTECHNIC STATE COLLEGE
-            </motion.h1>
-          </motion.div>
+      {/* Hero Section with Cinematic Background */}
+      <section className="relative overflow-hidden bg-neutral-900 text-white py-24 lg:py-32">
+        <div className="absolute inset-0 z-0">
+          <img
+            src={campusHero}
+            alt="ISPSC Campus Graduation"
+            className="w-full h-full object-cover opacity-30 scale-105 transform transition-transform duration-1000"
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/70 to-transparent" />
+        </div>
 
-          <motion.h1
-            variants={childVariants}
-            className="text-lg md:text-xl text-center text-white font-bold px-4"
+        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            Stay Connected. Track Your Journey. Shape the Future.
-          </motion.h1>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium text-amber-300 mb-6 border border-white/10">
+              <Sparkles className="w-3.5 h-3.5" />
+              Official Institutional Tracer Platform
+            </div>
 
-          <motion.p
-            variants={childVariants}
-            className="mx-auto w-[90%] md:w-[70%] lg:w-[50%] text-center text-white italic opacity-75 mt-5"
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 max-w-4xl mx-auto leading-tight">
+              Ilocos Sur Polytechnic State College
+            </h1>
+            <p className="text-xl md:text-2xl font-light text-neutral-300 mb-8 max-w-2xl mx-auto">
+              Stay Connected. Track Your Journey. Shape the Future.
+            </p>
+
+            <p className="text-neutral-400 text-sm md:text-base max-w-2xl mx-auto mb-10 leading-relaxed">
+              Welcome back, ISPSC Alumni! Whether you're advancing in your
+              career, pursuing higher studies, or pioneering new ventures, your
+              success story helps us shape the next generation of leaders.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button
+                onClick={() => setProceedtoForm(true)}
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-6 rounded-xl shadow-lg flex items-center gap-2 group text-base"
+              >
+                Take Tracer Survey
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <a href="#impact">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold px-8 py-6 rounded-xl backdrop-blur-sm text-base"
+                >
+                  Explore Impact
+                </Button>
+              </a>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Key Metrics Bar */}
+      <section
+        id="impact"
+        className="border-b border-neutral-100 bg-neutral-50 py-12"
+      >
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {METRICS.map(({ icon: Icon, value, label }) => (
+              <div
+                key={label}
+                className="bg-white p-8 rounded-2xl border border-neutral-200/60 shadow-sm flex items-center gap-6"
+              >
+                <div className="p-4 bg-primary/10 rounded-xl text-primary">
+                  <Icon className="w-8 h-8" />
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-neutral-900 tabular-nums">
+                    {value}
+                  </div>
+                  <div className="text-sm font-medium text-neutral-500 mt-1">
+                    {label}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Feature Grid Section */}
+      <section className="py-24 max-w-6xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-16">
+          <h2 className="text-xs font-semibold tracking-widest uppercase text-primary mb-3">
+            Alumni Community Portal
+          </h2>
+          <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900">
+            Why Your Participation Matters
+          </h3>
+          <p className="text-neutral-600 mt-4 text-base">
+            Your insights directly drive curriculum enhancements, career
+            placement opportunities, and institutional accreditation.
+          </p>
+        </div>
+
+        <div className="grid gap-8 md:grid-cols-3">
+          {FEATURES.map(({ icon: Icon, title, description }) => (
+            <div
+              key={title}
+              className="bg-neutral-50/50 p-8 rounded-2xl border border-neutral-200/80 hover:border-primary/40 transition-all duration-300"
+            >
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary mb-6">
+                <Icon className="w-6 h-6" />
+              </div>
+              <h4 className="text-xl font-semibold text-neutral-900 mb-3">
+                {title}
+              </h4>
+              <p className="text-neutral-600 text-sm leading-relaxed">
+                {description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Call to Action Banner */}
+      <section className="bg-primary py-20 text-white text-center px-6">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">
+            Ready to Share Your Journey?
+          </h2>
+          <p className="text-white/80 max-w-xl mx-auto mb-8 text-base">
+            Take 5 minutes to complete the Graduate Tracer Survey and help us
+            empower the next wave of graduates.
+          </p>
+          <Button
+            onClick={() => setProceedtoForm(true)}
+            size="lg"
+            className="bg-white text-primary hover:bg-neutral-100 font-semibold px-8 py-6 rounded-xl text-base shadow-xl"
           >
-            Welcome back, ISPSC Alumni! Whether you're advancing in your career,
-            pursuing higher studies, or exploring new opportunities, we want to
-            hear from you. Your success story matters—help us build a stronger
-            alumni network and improve future programs!
-          </motion.p>
+            Start Your Tracer Survey
+          </Button>
+        </div>
+      </section>
 
-          <motion.div className="flex flex-col md:flex-row justify-center md:gap-32 mt-5">
-            <motion.div
-              variants={childVariants}
-              className="p-4 md:p-8 text-center"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                5,000+
-              </h2>
-              <p className="text-white opacity-75">Traced Graduates</p>
-            </motion.div>
-            <motion.div
-              variants={childVariants}
-              className="p-4 md:p-8 text-center"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                80%
-              </h2>
-              <p className="text-white opacity-75">Employment Rate</p>
-            </motion.div>
-            <motion.div
-              variants={childVariants}
-              className="p-4 md:p-8 text-center"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-                50+
-              </h2>
-              <p className="text-white opacity-75">Partner Companies</p>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </div>
-      <div className="min-h-dvh bg-white w-[95%] md:w-[90%] lg:w-[80%] mx-auto">
-        <motion.div
-          variants={secondConatinerVariants}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: false }}
-          className="py-8 md:py-16 px-4 md:px-0"
-        >
-          <motion.div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 mb-16 md:mb-24">
-            <motion.div className="p-6 md:p-8 rounded-xl hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-gray-50">
-              <motion.h1
-                className="text-primary font-bold text-xl md:text-2xl mb-4"
-                variants={secondChildVariants}
-              >
-                Share Your Story
-              </motion.h1>
-              <motion.p
-                variants={secondChildVariants}
-                className="text-gray-600"
-              >
-                Let your experiences inspire future graduates through our
-                interactive platform.
-              </motion.p>
-            </motion.div>
-
-            <motion.div className="p-6 md:p-8 rounded-xl hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-gray-50">
-              <motion.h1
-                className="text-primary font-bold text-xl md:text-2xl mb-4"
-                variants={secondChildVariants}
-              >
-                Stay Connected
-              </motion.h1>
-              <motion.p
-                variants={secondChildVariants}
-                className="text-gray-600"
-              >
-                Build lasting connections with fellow alumni through our
-                networking platform.
-              </motion.p>
-            </motion.div>
-
-            <motion.div className="p-6 md:p-8 rounded-xl hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-gray-50">
-              <motion.h1
-                className="text-primary font-bold text-xl md:text-2xl mb-4"
-                variants={secondChildVariants}
-              >
-                Shape ISPSC's Future
-              </motion.h1>
-              <motion.p
-                variants={secondChildVariants}
-                className="text-gray-600"
-              >
-                Help us evolve and improve our academic programs with your
-                valuable insights.
-              </motion.p>
-            </motion.div>
-          </motion.div>
-
-          <motion.div className="my-16 md:my-24 text-center max-w-4xl mx-auto px-4">
-            <motion.h1
-              className="text-primary font-bold text-3xl md:text-4xl mb-6"
-              variants={secondChildVariants}
-            >
-              ISPSC GRADUATE TRACER
-            </motion.h1>
-            <motion.p
-              variants={secondChildVariants}
-              className="text-gray-600 text-base md:text-lg leading-relaxed"
-            >
-              Your gateway to staying connected with fellow graduates, sharing
-              experiences, and contributing to the growth of future generations.
-              Join us in building a stronger, more vibrant alumni community!
-            </motion.p>
-          </motion.div>
-
-          <motion.div className="grid grid-cols-1 gap-6 max-w-3xl mx-auto px-4 md:px-0">
-            <motion.div
-              variants={secondChildVariants}
-              className="flex flex-col md:flex-row items-center md:space-x-6 p-4 md:p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl 
-          hover:scale-105 transition-all duration-300 cursor-pointer"
-            >
-              <span className="text-4xl bg-white p-4 rounded-full shadow-md mb-4 md:mb-0">
-                🏆
-              </span>
-              <p className="text-base md:text-lg font-medium text-gray-700 text-center md:text-left">
-                Celebrate Alumni Achievements – Get featured in ISPSC's alumni
-                spotlights!
-              </p>
-            </motion.div>
-            <motion.div
-              variants={secondChildVariants}
-              className="flex flex-col md:flex-row items-center md:space-x-6 p-4 md:p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl 
-          hover:scale-105 transition-all duration-300 cursor-pointer"
-            >
-              <span className="text-4xl bg-white p-4 rounded-full shadow-md mb-4 md:mb-0">
-                💡
-              </span>
-              <p className="text-base md:text-lg font-medium text-gray-700 text-center md:text-left">
-                Your story inspires. Your feedback empowers.
-              </p>
-            </motion.div>
-            <motion.div
-              variants={secondChildVariants}
-              className="flex flex-col md:flex-row items-center md:space-x-6 p-4 md:p-6 bg-gradient-to-r from-primary/5 to-primary/10 rounded-2xl 
-          hover:scale-105 transition-all duration-300 cursor-pointer"
-            >
-              <span className="text-4xl bg-white p-4 rounded-full shadow-md mb-4 md:mb-0">
-                🚀
-              </span>
-              <p className="text-base md:text-lg font-medium text-gray-700 text-center md:text-left">
-                Let's make ISPSC an even better institution—together!
-              </p>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-      </div>
+      {/* Footer */}
+      <footer className="bg-neutral-900 text-neutral-400 py-12 border-t border-neutral-800">
+        <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <img
+              src={ispscLogo}
+              alt="ISPSC"
+              className="w-8 h-8 object-contain"
+            />
+            <span className="text-sm font-semibold text-white">
+              Ilocos Sur Polytechnic State College — Graduate Tracer System
+            </span>
+          </div>
+          <div className="text-xs text-neutral-500">
+            © {new Date().getFullYear()} ISPSC. All rights reserved. Data
+            Privacy Act of 2012 compliant.
+          </div>
+        </div>
+      </footer>
 
       {isProceedtoForm && (
         <ProceedToForm
@@ -259,34 +285,6 @@ const Home = () => {
           handleIsOpen={setProceedtoForm}
         />
       )}
-
-      {<Toaster />}
-
-      <div className="h-screen bg-primary flex items-center justify-center">
-        <motion.div
-          variants={secondConatinerVariants}
-          initial="initial"
-          whileInView="animate"
-          viewport={{ once: false }}
-          className="text-center px-4 md:px-8 lg:px-16"
-        >
-          <motion.h1
-            variants={secondChildVariants}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-8"
-          >
-            Ready to Share Your Journey?
-          </motion.h1>
-          <motion.button
-            onClick={() => setProceedtoForm(true)}
-            variants={secondChildVariants}
-            className="bg-white text-primary hover:bg-primary hover:text-white border-2 border-white 
-        px-8 py-4 rounded-full text-lg md:text-xl font-semibold 
-        transition-all duration-300 transform hover:scale-105"
-          >
-            Start Your Tracer Survey
-          </motion.button>
-        </motion.div>
-      </div>
     </div>
   );
 };

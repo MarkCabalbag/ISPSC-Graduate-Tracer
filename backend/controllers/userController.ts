@@ -52,7 +52,7 @@
 
 import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
 import {
   sendGraduateTracerEmail,

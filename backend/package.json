@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
-  "scripts": {
-    "dev": "tsx watch server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "contract:emit": "prisma contract emit"
-  },
+"scripts": {
+  "dev": "tsx watch server.ts",
+  "build": "tsc",
+  "start": "node dist/server.js"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",

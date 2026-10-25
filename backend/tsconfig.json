@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2022",
-    "module": "preserve",
-    "moduleResolution": "bundler",
     "rootDir": ".",
     "outDir": "./dist",
     "esModuleInterop": true,

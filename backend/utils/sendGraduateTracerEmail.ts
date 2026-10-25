@@ -40,7 +40,7 @@
 
 import path from "path";
 import nodemailer from "nodemailer";
-import type Mail from "nodemailer/lib/mailer";
+import type Mail from "nodemailer/lib/mailer/index.js";
 import hbs from "nodemailer-express-handlebars";
 
 /* -------------------------------------------------------------------------- */

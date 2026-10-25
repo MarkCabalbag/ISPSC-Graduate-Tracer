@@ -111,7 +111,6 @@ import type {
   MessageResponse,
   OrganizationTotal,
   ProgramListItem,
-  ProgramSummary,
   QuestionResult,
   SessionInfo,
   SurveyResponseRow,

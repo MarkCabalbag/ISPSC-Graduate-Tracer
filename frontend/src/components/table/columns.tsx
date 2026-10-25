@@ -135,7 +135,7 @@ export const columns = [
     header: () => "Program",
     cell: (info) => info.getValue(),
   }),
-  summaryColumn.accessor("totalTracedGraduates", {
+  summaryColumn.accessor("totalGraduates", {
     id: "totalTracedGraduates",
     header: () => "Total Traced Graduates",
     cell: (info) => info.getValue(),

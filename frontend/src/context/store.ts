@@ -1,3 +1,4 @@
+
 import { create } from "zustand";
 import { TableOptions } from "@tanstack/react-table";
 
@@ -10,7 +11,7 @@ type FormState = {
   programId: number;
   majorId: number;
 
-  //the questions
+  // Employment questions
   isEmployed: string;
   isJobAligned: string;
   isSelfEmployed: string;
@@ -20,33 +21,34 @@ type FormState = {
 
   isProgramOpen: boolean;
   isMajorOpen: boolean;
+  isContinueFillOut: boolean;
 
   handleDepartmentChange: (
     value: string,
-    getDepartment: () => Promise<void>
+    getDepartment: () => Promise<unknown>
   ) => Promise<void>;
 
   handleMajorChange: (
     value: string,
-    getMajor: () => Promise<void>
+    getMajor: () => Promise<unknown>
   ) => Promise<void>;
 
   handleMajorSelect: (value: string) => void;
-
   handleEmployedChange: (value: string) => void;
   handleEmailChange: (value: string) => void;
   handleNameChange: (value: string) => void;
   handleGraduationChange: (value: string) => void;
   handleSurveyChange: (value: string) => void;
-
   handleAlignedJob: (value: string) => void;
   handleSelfEmployed: (value: string) => void;
   handleFurtherStudies: (value: string) => void;
   handleTypeOfOrganization: (value: string) => void;
   handleCurrentJobLocation: (value: string) => void;
+
+  resetFormState: () => void;
 };
 
-export const useFormStore = create<FormState>((set) => ({
+const initialFormState = {
   yearOfSurvey: "",
   email: "",
   fullName: "",
@@ -54,49 +56,77 @@ export const useFormStore = create<FormState>((set) => ({
   departmentId: 0,
   programId: 0,
   majorId: 0,
+
   isProgramOpen: false,
   isMajorOpen: false,
+  isContinueFillOut: false,
 
+  isEmployed: "",
   isJobAligned: "",
   isSelfEmployed: "",
   isFurtherStudies: "",
   typeOfOrganization: "",
   currentJobLocated: "",
-  isContinueFillOut: false,
+};
 
-  //the questions
-  isEmployed: "",
+export const useFormStore = create<FormState>((set) => ({
+  ...initialFormState,
 
   handleDepartmentChange: async (value, getDepartment) => {
-    const id = Number(value);
-    set({ departmentId: id, isProgramOpen: true });
-    await getDepartment();
+    const id = value ? Number(value) : 0;
+
+    // Reset dependent selections when the department changes.
+    set({
+      departmentId: id,
+      programId: 0,
+      majorId: 0,
+      isProgramOpen: Boolean(id),
+      isMajorOpen: false,
+    });
+
+    if (id) {
+      await getDepartment();
+    }
   },
 
   handleMajorChange: async (value, getMajor) => {
-    const id = Number(value);
-    set({ programId: id, isMajorOpen: true });
-    await getMajor();
+    const id = value ? Number(value) : 0;
+
+    // Reset the selected major when the program changes.
+    set({
+      programId: id,
+      majorId: 0,
+      isMajorOpen: Boolean(id),
+    });
+
+    if (id) {
+      await getMajor();
+    }
   },
 
-  handleMajorSelect: (value: string) => set({ majorId: Number(value) }),
+  handleMajorSelect: (value) =>
+    set({ majorId: value ? Number(value) : 0 }),
 
-  handleEmployedChange: (value: string) => {
-    value === "yes" ? set({ isEmployed: "yes" }) : set({ isEmployed: "no" });
-  },
+  handleEmployedChange: (value) =>
+    set({
+      isEmployed: value === "yes" ? "yes" : value === "no" ? "no" : "",
+    }),
 
-  handleAlignedJob: (value: string) => set({ isJobAligned: value }),
-  handleSelfEmployed: (value: string) => set({ isSelfEmployed: value }),
-  handleFurtherStudies: (value: string) => set({ isFurtherStudies: value }),
-  handleTypeOfOrganization: (value: string) =>
+  handleAlignedJob: (value) => set({ isJobAligned: value }),
+  handleSelfEmployed: (value) => set({ isSelfEmployed: value }),
+  handleFurtherStudies: (value) => set({ isFurtherStudies: value }),
+  handleTypeOfOrganization: (value) =>
     set({ typeOfOrganization: value }),
-  handleCurrentJobLocation: (value: string) =>
+  handleCurrentJobLocation: (value) =>
     set({ currentJobLocated: value }),
 
-  handleEmailChange: (value: string) => set({ email: value }),
-  handleNameChange: (value: string) => set({ fullName: value }),
-  handleGraduationChange: (value: string) => set({ yearOfGraduation: value }),
-  handleSurveyChange: (value: string) => set({ yearOfSurvey: value }),
+  handleEmailChange: (value) => set({ email: value }),
+  handleNameChange: (value) => set({ fullName: value }),
+  handleGraduationChange: (value) =>
+    set({ yearOfGraduation: value }),
+  handleSurveyChange: (value) => set({ yearOfSurvey: value }),
+
+  resetFormState: () => set({ ...initialFormState }),
 }));
 
 type AdminState<T> = {
@@ -105,19 +135,22 @@ type AdminState<T> = {
   program: string;
   major: string;
   programId: number;
+
   setCollegeDepartment: (department: string) => void;
   setProgramDepartment: (program: string) => void;
   setMajorProgram: (major: string) => void;
   setNewProgram: (program: string) => void;
+
   openEditProgram: boolean;
   setOpenEditProgram: (open: boolean) => void;
+
   table: TableOptions<T>;
-  // setColumnFilters: (columnFilters: ColumnFiltersState[]) => void;
   setTable: (table: TableOptions<T>) => void;
+
   statuses: T[];
   status: string;
   isActive: boolean;
-  // columnFilters: ColumnFiltersState[];
+
   pagination: {
     pageIndex: number;
     pageSize: number;
@@ -132,32 +165,28 @@ export const useAdminStore = create<AdminState<unknown>>((set) => ({
   program: "",
   major: "",
   programId: 0,
+
   openEditProgram: false,
   table: {} as TableOptions<unknown>,
   statuses: [],
   status: "",
   isActive: false,
-  // columnFilters: [] as ColumnFiltersState[],
+
   pagination: {
     pageIndex: 0,
     pageSize: 10,
   },
 
-  setMajorProgram: (major: string) => set({ major: major }),
-  setProgramDepartment: (program: string) => set({ program: program }),
-  setCollegeDepartment: (department: string) => set({ department: department }),
-  // setColumnFilters: (columnFilters: ColumnFiltersState[]) => {
-  //   set({ columnFilters });
-  // },
-  setPageIndex: (pageSize: number, pageIndex: number) =>
-    set({
-      pagination: {
-        pageIndex: pageIndex,
-        pageSize: pageSize,
-      },
-    }),
-  setTable: (table: TableOptions<unknown>) => set({ table }),
+  setMajorProgram: (major) => set({ major }),
+  setProgramDepartment: (program) => set({ program }),
+  setCollegeDepartment: (department) => set({ department }),
 
-  setNewProgram: (program: string) => set({ program: program }),
-  setOpenEditProgram: (open: boolean) => set({ openEditProgram: open }),
+  setPageIndex: (pageIndex, pageSize) =>
+    set({
+      pagination: { pageIndex, pageSize },
+    }),
+
+  setTable: (table) => set({ table }),
+  setNewProgram: (program) => set({ program }),
+  setOpenEditProgram: (open) => set({ openEditProgram: open }),
 }));

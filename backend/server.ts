@@ -64,6 +64,7 @@ import authRouter from "./routes/authRouter.js";
 import { generalLimiter } from "./middleware/rateLimiters.js";
 import { getJwtSecret } from "./middleware/requireAdmin.js";
 import noStore from "./middleware/noStore.js";
+import auditLog from "./middleware/auditLog.js";
 import { assertEnvironment } from "./lib/env.js";
 import departmentRouter from "./routes/departmentRouter.js";
 import programRouter from "./routes/programRouter.js";
@@ -149,6 +150,7 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 app.use(BASE_URL, generalLimiter);
+app.use(BASE_URL, auditLog);
 
 // Admin and session responses carry personal data: never cache them.
 app.use(`${BASE_URL}/auth`, noStore);

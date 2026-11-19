@@ -20,6 +20,8 @@
  * | `GET`    | `/jobLocation/:yearOfGraduation/:program`           | `getCurrentJobLocation`   |
  * | `GET`    | `/department/details`                               | `getDepartmentDetails`    |
  * | `DELETE` | `/student/response/:id`                             | `deleteStudentById`       |
+ * | `GET`    | `/analytics`                                        | `getAnalytics`            |
+ * | `GET`    | `/responses/export`                                 | `exportResponses` (CSV)   |
  *
  * **Security note**
  *
@@ -32,12 +34,17 @@
 
 import { Router } from "express";
 import adminController from "../controllers/adminController.js";
-import requireAdmin from "../middleware/requireAdmin.js"
+import requireAdmin from "../middleware/requireAdmin.js";
+import analyticsController from "../controllers/analyticsController.js";
+import exportController from "../controllers/exportController.js";
 
 const router = Router();
 
 // Everything below this line needs an admin token.
 router.use(requireAdmin);
+
+router.get("/analytics", analyticsController.getAnalytics);
+router.get("/responses/export", exportController.exportResponses);
 
 router.get("/getAllData", adminController.getSummaryData);
 router.get("/overviewStudents", adminController.overviewTracedStudents);

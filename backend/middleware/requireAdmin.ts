@@ -134,6 +134,7 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction): void => 
     }
 
     res.locals.adminExpiresAt = (payload.exp ?? 0) * 1000;
+    res.locals.adminUser = typeof payload.sub === "string" ? payload.sub : "admin";
     next();
   } catch (error) {
     // Includes expired tokens (TokenExpiredError extends JsonWebTokenError).

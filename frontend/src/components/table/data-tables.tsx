@@ -93,7 +93,6 @@ import {
   CloudDownload,
   LucideArrowUpDown,
 } from "lucide-react";
-import * as XLSX from "xlsx";
 import { Card, CardContent, CardFooter, CardHeader } from "../ui/card";
 import { Input } from "../ui/input";
 import {
@@ -168,7 +167,9 @@ export function DataTable<TData>({
     { value: allRowsSize, label: "All" },
   ];
 
-  const handleExport = () => {
+  // The Excel library is large, so it is only downloaded when someone exports.
+  const handleExport = async () => {
+    const XLSX = await import("xlsx");
     const workBook = XLSX.utils.book_new();
     const sheet = XLSX.utils.json_to_sheet(dataSheet);
     XLSX.utils.book_append_sheet(workBook, sheet, "Sheet1");

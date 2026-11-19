@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, Suspense, lazy } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 
@@ -13,14 +13,14 @@ import {
   RouterProvider,
 } from "react-router-dom";
 
-import AdminLogin from "./admin/Login.tsx";
-import OverviewRowGraduates from "./components/OverviewRowGraduates.tsx";
+const AdminLogin = lazy(() => import("./admin/Login.tsx"));
+const OverviewRowGraduates = lazy(() => import("./components/OverviewRowGraduates.tsx"));
 
 import Home from "./components/Home.tsx";
-import Form from "./Form.tsx";
+const Form = lazy(() => import("./Form.tsx"));
 import AuthProvider from "./admin/auth/AuthProvider.tsx";
 import RequireAdmin from "./admin/auth/RequireAdmin.tsx";
-import Dashboard from "./admin/Dashboard.tsx";
+const Dashboard = lazy(() => import("./admin/Dashboard.tsx"));
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -44,7 +44,15 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RouterProvider router={router} />
+        <Suspense
+          fallback={
+            <div role="status" className="p-8 text-center text-neutral-600">
+              Loading...
+            </div>
+          }
+        >
+          <RouterProvider router={router} />
+        </Suspense>
       </AuthProvider>
     </QueryClientProvider>
   </StrictMode>

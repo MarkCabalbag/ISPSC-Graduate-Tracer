@@ -161,3 +161,35 @@ export type ProgramListItem = {
   program: string;
   departmentId: number;
 };
+/* -------------------------------------------------------------------------- */
+/*                                  Analytics                                 */
+/* -------------------------------------------------------------------------- */
+
+/** Answer of `GET /admin/analytics`. Rates are percentages, `null` without data. */
+export type AnalyticsResult = {
+  totals: {
+    traced: number;
+    employed: number;
+    notEmployed: number;
+    employmentRate: number | null;
+    jobAligned: number;
+    jobNotAligned: number;
+    jobAlignmentRate: number | null;
+    selfEmployed: number;
+    furtherStudies: number;
+  };
+  byYear: {
+    yearOfGraduation: number | null;
+    traced: number;
+    employed: number;
+    employmentRate: number | null;
+  }[];
+  byProgram: {
+    program: string | null;
+    traced: number;
+    employed: number;
+    employmentRate: number | null;
+  }[];
+  organization: { organization: string; total: number }[];
+  location: { location: string; total: number }[];
+};

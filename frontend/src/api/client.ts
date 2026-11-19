@@ -94,7 +94,7 @@
  * @packageDocumentation
  */
 
-import { http, segment } from "./http";
+import { API_BASE_URL, ApiError, http, segment } from "./http";
 import type {
   collegeDepartment,
   DepartmentDetails,
@@ -106,6 +106,7 @@ import type {
 } from "../types/type";
 import type {
   AdminProgram,
+  AnalyticsResult,
   JobLocationTotal,
   LoginResult,
   MessageResponse,
@@ -179,6 +180,40 @@ const admin = {
   /** Every program, without its department id. */
   listPrograms: (options?: ReadOptions) =>
     http.get<AdminProgram[]>("/admin/listOfPrograms", options),
+
+  /** Counts for the dashboard charts: employment rate, by year and program. */
+  getAnalytics: (options?: ReadOptions) =>
+    http.get<AnalyticsResult>("/admin/analytics", options),
+
+  /**
+   * Downloads the survey responses as a CSV file (admin only).
+   *
+   * @param filters - Optional `yearOfGraduation`, `program` and `department`.
+   * @returns The CSV file as a `Blob`.
+   */
+  exportResponsesCsv: async (
+    filters: {
+      yearOfGraduation?: number | string;
+      program?: string;
+      department?: string;
+    } = {},
+  ): Promise<Blob> => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== "") query.set(key, String(value));
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/admin/responses/export?${query.toString()}`,
+      { credentials: "include", headers: { Accept: "text/csv" } },
+    );
+
+    if (!response.ok) {
+      throw new ApiError(response.status, "The export could not be created.");
+    }
+
+    return response.blob();
+  },
 
   /** Every department with its programs and majors. */
   getDepartmentDetails: (options?: ReadOptions) =>

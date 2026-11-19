@@ -204,6 +204,13 @@ export const useGetSummaryData = () => {
   });
 };
 
+export const useGetAnalytics = () => {
+  return useQuery({
+    queryKey: ["analytics"],
+    queryFn: () => client.admin.getAnalytics(),
+  });
+};
+
 export const useGetOverviewTracedGraduates = () => {
   return useQuery({
     queryKey: ["overviewTracedGraduates"],

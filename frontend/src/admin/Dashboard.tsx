@@ -82,6 +82,7 @@ import { motion } from "motion/react";
 import { Toaster } from "react-hot-toast";
 import Header from "../components/Header";
 import OverviewTracedStudents from "../components/OverviewTracedStudents";
+import AnalyticsOverview from "../components/AnalyticsOverview";
 import { useNavigate } from "react-router-dom";
 import { useGetDepartmentDetails, useGetSummaryData } from "../context/hooks";
 import { useState } from "react";
@@ -156,6 +157,8 @@ const Dashboard = () => {
         <OverviewTracedStudents />
       </motion.div>
       {<Toaster />}
+
+      <AnalyticsOverview />
 
       {/* ===== SECTION 2: Employability data table ========================== */}
       <motion.div className="w-[90%] mx-auto" variants={itemVariants}>

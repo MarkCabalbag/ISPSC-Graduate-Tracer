@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * =============================================================================
  * ChartBarhorizontal.tsx — Reusable horizontal bar chart card
@@ -93,7 +94,7 @@ const CHART_BAR_SIZE = 100;
  * Component
  * ---------------------------------------------------------------------------*/
 
-export function ChartBarhorizontal({
+function ChartBarhorizontalImpl({
   chartData,
   chartConfig,
   dataKey,
@@ -144,3 +145,6 @@ export function ChartBarhorizontal({
     </Card>
   );
 }
+
+// Charts are expensive to draw: skip re-rendering when the props are unchanged.
+export const ChartBarhorizontal = memo(ChartBarhorizontalImpl);

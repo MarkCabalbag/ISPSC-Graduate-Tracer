@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * =============================================================================
  * ChartMultipleBar.tsx — Grouped (multi-series) bar chart card
@@ -93,7 +94,7 @@ const CHART_BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0];
  * Component
  * ---------------------------------------------------------------------------*/
 
-export function ChartMultipleBar({
+function ChartMultipleBarImpl({
   chartData,
   chartConfig,
   dataKey,
@@ -131,3 +132,6 @@ export function ChartMultipleBar({
     </Card>
   );
 }
+
+// Charts are expensive to draw: skip re-rendering when the props are unchanged.
+export const ChartMultipleBar = memo(ChartMultipleBarImpl);

@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * =============================================================================
  * ChartBar.tsx — Reusable bar chart card
@@ -91,7 +92,7 @@ const CHART_BAR_RADIUS: [number, number, number, number] = [4, 4, 0, 0];
  * Component
  * ---------------------------------------------------------------------------*/
 
-export function ChartBar({
+function ChartBarImpl({
   chartData,
   chartConfig,
   dataKey,
@@ -131,3 +132,6 @@ export function ChartBar({
     </Card>
   );
 }
+
+// Charts are expensive to draw: skip re-rendering when the props are unchanged.
+export const ChartBar = memo(ChartBarImpl);

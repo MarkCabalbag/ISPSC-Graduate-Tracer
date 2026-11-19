@@ -1,3 +1,4 @@
+import { memo } from "react";
 /**
  * =============================================================================
  * ChartPie.tsx — Reusable donut (pie) chart card
@@ -101,7 +102,7 @@ const renderActiveShape = ({
  * Component
  * ---------------------------------------------------------------------------*/
 
-export function ChartPie({
+function ChartPieImpl({
   chartData,
   chartConfig,
   dataKey,
@@ -142,3 +143,6 @@ export function ChartPie({
     </Card>
   );
 }
+
+// Charts are expensive to draw: skip re-rendering when the props are unchanged.
+export const ChartPie = memo(ChartPieImpl);

@@ -267,7 +267,10 @@ const GraduateEmploymentInformation = () => {
                   handleDepartmentChange(value, getDepartment)
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger
+                  aria-label="College / Department"
+                  className="w-full"
+                >
                   <SelectValue placeholder="Select College / Department" />
                 </SelectTrigger>
                 <SelectContent>
@@ -299,6 +302,7 @@ const GraduateEmploymentInformation = () => {
               onValueChange={(value) => handleMajorChange(value, getMajor)}
             >
               <SelectTrigger
+                aria-label="Program"
                 className={`w-full ${isError ? "border-red-500" : ""}`}
               >
                 <SelectValue placeholder="Select Program" />
@@ -336,6 +340,7 @@ const GraduateEmploymentInformation = () => {
               <h2 className="text-lg font-medium mb-3">Major</h2>
               <Select onValueChange={(value) => handleMajorSelect(value)}>
                 <SelectTrigger
+                  aria-label="Major"
                   className={`w-full ${isError ? "border-red-500" : ""}`}
                 >
                   <SelectValue placeholder="Select Major" />

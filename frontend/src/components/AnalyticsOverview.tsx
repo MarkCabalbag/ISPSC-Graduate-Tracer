@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { DownloadIcon } from "lucide-react";
 import { client } from "../api/client";
@@ -37,6 +37,24 @@ const StatTile = ({ label, value }: { label: string; value: string }) => (
 const AnalyticsOverview = () => {
   const { data, isLoading, isError, refetch } = useGetAnalytics();
   const [isExporting, setIsExporting] = useState(false);
+
+  // Stable arrays, so the memoized charts only redraw when the data changes.
+  const yearData = useMemo(
+    () =>
+      (data?.byYear ?? []).map((row) => ({
+        ...row,
+        yearOfGraduation: String(row.yearOfGraduation ?? "Unknown"),
+      })),
+    [data],
+  );
+  const programData = useMemo(
+    () =>
+      (data?.byProgram ?? []).map((row) => ({
+        ...row,
+        program: row.program ?? "Unknown",
+      })),
+    [data],
+  );
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -117,20 +135,14 @@ const AnalyticsOverview = () => {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <ChartBar
-              chartData={data.byYear.map((row) => ({
-                ...row,
-                yearOfGraduation: String(row.yearOfGraduation ?? "Unknown"),
-              }))}
+              chartData={yearData}
               chartConfig={chartConfigEmployment}
               dataKey="yearOfGraduation"
               title="Graduates by Year"
               description="Traced and employed graduates per graduation year"
             />
             <ChartBar
-              chartData={data.byProgram.map((row) => ({
-                ...row,
-                program: row.program ?? "Unknown",
-              }))}
+              chartData={programData}
               chartConfig={chartConfigEmployment}
               dataKey="program"
               title="Graduates by Program"

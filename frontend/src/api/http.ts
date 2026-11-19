@@ -312,6 +312,20 @@ export const request = async <T>(
   } = options;
   const idempotent = options.idempotent ?? method === "GET";
 
+  // Sample-data preview (npm run preview:demo). Vite replaces the flag at build time, so a
+  // production build drops this branch and never bundles the mock.
+  if (import.meta.env.VITE_MOCK_API === "true") {
+    const { mockRequest } = await import("../mocks/mockApi");
+    try {
+      return (await mockRequest(method, path, body)) as T;
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401 && auth) {
+        window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+      }
+      throw error;
+    }
+  }
+
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";

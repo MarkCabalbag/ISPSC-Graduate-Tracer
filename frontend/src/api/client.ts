@@ -110,6 +110,7 @@ import type {
   JobLocationTotal,
   LoginResult,
   MessageResponse,
+  ProgramSummary,
   OrganizationTotal,
   ProgramListItem,
   QuestionResult,
@@ -117,7 +118,6 @@ import type {
   SurveyResponseRow,
   TracedPercentageResult,
 } from "../types/api";
-import { AdminColumnDef } from "../components/table/columns";
 
 /** Options of the calls that only read data. */
 type ReadOptions = { signal?: AbortSignal };
@@ -171,7 +171,7 @@ const admin = {
 
   /** Employment summary of every graduation year and program. */
   getSummary: (options?: ReadOptions) =>
-    http.get<AdminColumnDef[]>("/admin/getAllData", options),
+    http.get<ProgramSummary[]>("/admin/getAllData", options),
 
   /** Traced graduates in each department. */
   getDepartmentOverview: (options?: ReadOptions) =>
@@ -201,6 +201,11 @@ const admin = {
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(filters)) {
       if (value !== undefined && value !== "") query.set(key, String(value));
+    }
+
+    if (import.meta.env.VITE_MOCK_API === "true") {
+      const { mockCsv } = await import("../mocks/mockApi");
+      return mockCsv(filters);
     }
 
     const response = await fetch(

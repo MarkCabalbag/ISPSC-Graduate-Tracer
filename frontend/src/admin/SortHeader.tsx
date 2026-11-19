@@ -8,7 +8,7 @@ export function useSort<T>(rows: T[], initial: SortState<T>) {
   const [sort, setSort] = useState<SortState<T>>(initial);
   const sorted = useMemo(() => {
     const factor = sort.dir === "ascending" ? 1 : -1;
-    return [...rows].sort((a, b) => {
+    return rows.toSorted((a, b) => {
       const x = a[sort.key];
       const y = b[sort.key];
       if (x === y) return 0;

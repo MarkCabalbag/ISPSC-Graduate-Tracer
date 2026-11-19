@@ -37,7 +37,7 @@ export default function Respondents() {
   // Default to the latest cohort with responses, so the page never opens empty.
   useEffect(() => {
     if (!summary.data || (year && program)) return;
-    const latest = [...summary.data].sort((a, b) => Number(b.yearOfGraduation) - Number(a.yearOfGraduation))[0];
+    const latest = summary.data.toSorted((a, b) => Number(b.yearOfGraduation) - Number(a.yearOfGraduation))[0];
     if (latest) set({ year: year || latest.yearOfGraduation, program: program || (latest.program ?? "") });
   }, [summary.data, year, program, set]);
 

@@ -139,11 +139,18 @@ const getAnalytics = asyncHandler(async (_req: Request, res: Response) => {
         },
         {
           organization: "Entrepreneurial",
-          total: countOf(
-            byOrganization,
-            "typeOfOrganization",
-            "entrepreneurial / freelance",
-          ),
+          // "entreprenueral" is the spelling older survey forms saved.
+          total:
+            countOf(
+              byOrganization,
+              "typeOfOrganization",
+              "entrepreneurial / freelance",
+            ) +
+            countOf(
+              byOrganization,
+              "typeOfOrganization",
+              "entreprenueral / freelance",
+            ),
         },
       ],
       location: [

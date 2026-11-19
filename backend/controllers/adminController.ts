@@ -82,6 +82,8 @@ const ORGANIZATION_TYPE = {
   GOVERNMENT: "government",
   PRIVATE: "private institution",
   FREELANCE: "entrepreneurial / freelance",
+  /** Spelling saved by older versions of the survey form. Counted as FREELANCE. */
+  FREELANCE_LEGACY: "entreprenueral / freelance",
 } as const;
 
 /** Stored values of the `currentJobLocated` column. */
@@ -312,7 +314,9 @@ const getSummaryData = asyncHandler(async (_req: Request, res: Response) => {
         (r) => r.typeOfOrganization === ORGANIZATION_TYPE.PRIVATE,
       ).length,
       totalOfGraduatesFreelance: group.filter(
-        (r) => r.typeOfOrganization === ORGANIZATION_TYPE.FREELANCE,
+        (r) =>
+          r.typeOfOrganization === ORGANIZATION_TYPE.FREELANCE ||
+          r.typeOfOrganization === ORGANIZATION_TYPE.FREELANCE_LEGACY,
       ).length,
       totalOfGraduatesEmployedLocally: group.filter(
         (r) => r.currentJobLocated === JOB_LOCATION.LOCAL,
@@ -816,7 +820,15 @@ const getTypeOfOrganisation = asyncHandler(
           where: { ...where, typeOfOrganization: ORGANIZATION_TYPE.PRIVATE },
         }),
         prisma.responses.count({
-          where: { ...where, typeOfOrganization: ORGANIZATION_TYPE.FREELANCE },
+          where: {
+            ...where,
+            typeOfOrganization: {
+              in: [
+                ORGANIZATION_TYPE.FREELANCE,
+                ORGANIZATION_TYPE.FREELANCE_LEGACY,
+              ],
+            },
+          },
         }),
       ]);
 

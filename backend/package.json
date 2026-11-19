@@ -9,9 +9,10 @@
     "build": "prisma generate && tsc",
     "postinstall": "prisma generate",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.check.json",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -43,12 +44,15 @@
     "@types/nodemailer": "^8.0.2",
     "@types/nodemailer-express-handlebars": "^4.0.6",
     "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
     "eslint": "^9.39.5",
     "globals": "^17.14.0",
     "prettier": "^3.10.1",
     "prisma": "^7.10.1",
+    "supertest": "^7.3.2",
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.73.0"
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.1"
   }
 }

@@ -116,12 +116,16 @@ const Home = () => {
       <Navigation />
       <Toaster />
 
+      <main id="main-content">
       {/* Hero Section with Cinematic Background */}
       <section className="relative overflow-hidden bg-neutral-900 text-white py-24 lg:py-32">
         <div className="absolute inset-0 z-0">
           <img
             src={campusHero}
-            alt="ISPSC Campus Graduation"
+            alt=""
+            aria-hidden="true"
+            fetchPriority="high"
+            decoding="async"
             className="w-full h-full object-cover opacity-30 scale-105 transform transition-transform duration-1000"
             referrerPolicy="no-referrer"
           />
@@ -259,6 +263,8 @@ const Home = () => {
         </div>
       </section>
 
+      </main>
+
       {/* Footer */}
       <footer className="bg-neutral-900 text-neutral-400 py-12 border-t border-neutral-800">
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -266,6 +272,8 @@ const Home = () => {
             <img
               src={ispscLogo}
               alt="ISPSC"
+              loading="lazy"
+              decoding="async"
               className="w-8 h-8 object-contain"
             />
             <span className="text-sm font-semibold text-white">

@@ -79,6 +79,13 @@ const Navigation = () => {
   };
 
   return (
+    <>
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-primary focus:shadow-lg"
+    >
+      Skip to main content
+    </a>
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-neutral-200 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-8">
         {/* Zone 1: Brand Wordmark */}
@@ -147,6 +154,7 @@ const Navigation = () => {
         </div>
       </div>
     </header>
+    </>
   );
 };
 

@@ -247,7 +247,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* ===== SECTION 4: Departments -> Programs -> Majors ================= */}
-      <main className="w-[90%] mx-auto my-5">
+      <main id="main-content" className="w-[90%] mx-auto my-5">
         <div>
           <div className="grid gap-8">
             {departments.map((department: DepartmentDetails) => (
@@ -325,6 +325,7 @@ const Dashboard = () => {
                               setOpenModal({ type: "createMajor", id: program?.id as number });
                             }}
                             title="Add Major"
+                            aria-label="Add Major"
                           >
                             <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                           </motion.button>
@@ -336,6 +337,7 @@ const Dashboard = () => {
                               setOpenModal({ type: "deleteProgram", id: program?.id as number });
                             }}
                             title="Delete Program"
+                            aria-label="Delete Program"
                           >
                             <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                           </motion.button>
@@ -344,6 +346,7 @@ const Dashboard = () => {
                             whileTap={{ scale: 0.95 }}
                             className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors"
                             title="Edit Program"
+                            aria-label="Edit Program"
                             onClick={() => setOpenModal({ type: "editProgram", id: program?.id as number })}
                           >
                             <Edit2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -382,6 +385,7 @@ const Dashboard = () => {
                                         whileTap={{ scale: 0.95 }}
                                         className="p-2 hover:bg-red-50 rounded-lg text-red-500 transition-colors"
                                         title="Delete Major"
+                            aria-label="Delete Major"
                                         onClick={() => {
                                           setOpenModal({ type: "deleteMajor", id: major?.id as number });
                                         }}
@@ -393,6 +397,7 @@ const Dashboard = () => {
                                         whileTap={{ scale: 0.95 }}
                                         className="p-2 hover:bg-primary/10 rounded-lg text-primary transition-colors"
                                         title="Edit Major"
+                            aria-label="Edit Major"
                                         onClick={() => {
                                           setOpenModal({ type: "editMajor", id: major?.id as number });
                                         }}

@@ -29,7 +29,7 @@ const Form = () => {
     <div className="min-h-screen bg-neutral-50 pb-16">
       <Navigation />
       {<Toaster />}
-      <div className="w-[90%] max-w-[768px] mx-auto space-y-8 pt-8">
+      <main id="main-content" className="w-[90%] max-w-[768px] mx-auto space-y-8 pt-8">
         <Header />
 
         <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 mb-4 border border-neutral-200 border-t-8 border-t-primary space-y-6">
@@ -81,7 +81,7 @@ const Form = () => {
         <div className="bg-white rounded-xl shadow-sm p-6 md:p-8 border border-neutral-200 border-t-8 border-t-primary">
           <GraduateEmploymentInformation />
         </div>
-      </div>
+      </main>
     </div>
   );
 };

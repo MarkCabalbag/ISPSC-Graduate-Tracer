@@ -213,8 +213,8 @@ const GraduateEmploymentInformation = () => {
       });
 
       resetForm();
-    } catch (e) {
-      console.log("An error occured:", e);
+    } catch {
+      // The error toast is shown by the useAddResponse hook; keep the form as is.
     }
   };
 

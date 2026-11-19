@@ -105,7 +105,6 @@ const OverviewRowGraduates = () => {
     Number(yearParam),
     programParam
   );
-  console.log("data", data);
   const { data: totalGraduates, isLoading: isLoadingTotalGraduates } =
     useGetTotalGraduates(yearParam, programParam);
   const { data: employmentStatistics } = useGetEmploymentStatistics(

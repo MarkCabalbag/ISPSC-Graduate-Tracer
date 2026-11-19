@@ -78,7 +78,7 @@
 import { columns } from "../components/table/columns";
 import { Card } from "../components/ui/card";
 import { DataTable } from "../components/table/data-tables";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Toaster } from "react-hot-toast";
 import Header from "../components/Header";
 import OverviewTracedStudents from "../components/OverviewTracedStudents";

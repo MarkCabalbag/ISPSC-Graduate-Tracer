@@ -54,8 +54,8 @@ export default function StartPage() {
             campus's survey.
           </p>
           <h2 className="mt-6 text-[19px] font-bold">College staff</h2>
-          <p className="mt-2 text-[16px]">
-            <Link to="/admin/login" className="text-link">
+          <p className="mt-1 text-[16px]">
+            <Link to="/admin/login" className="text-link inline-flex min-h-11 items-center">
               Sign in to the admin
             </Link>
           </p>

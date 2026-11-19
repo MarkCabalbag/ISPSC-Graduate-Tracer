@@ -42,7 +42,7 @@ export default function Respondents() {
   }, [summary.data, year, program, set]);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pt-6">
         <div>
           <h1 className="text-[28px] leading-9 font-bold tracking-[-0.02em]">Respondents</h1>
@@ -232,7 +232,7 @@ function Cohort({ year, program }: { year: string; program: string }) {
             </EmptyState>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[920px] border-collapse text-[15px]">
               <caption className="sr-only">
                 Respondents from {program}, class of {year}. Sortable; page {current} of {pages}.

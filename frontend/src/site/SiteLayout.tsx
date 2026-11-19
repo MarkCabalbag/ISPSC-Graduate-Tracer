@@ -39,12 +39,12 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           <p>Ilocos Sur Polytechnic State College · Sta. Maria campus · MIS office</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li>
-              <Link className="text-ink-2 underline underline-offset-2 hover:text-ink" to="/privacy">
+              <Link className="inline-flex min-h-11 items-center text-ink-2 underline underline-offset-2 hover:text-ink" to="/privacy">
                 Privacy notice
               </Link>
             </li>
             <li>
-              <Link className="text-ink-2 underline underline-offset-2 hover:text-ink" to="/admin/login">
+              <Link className="inline-flex min-h-11 items-center text-ink-2 underline underline-offset-2 hover:text-ink" to="/admin/login">
                 Staff sign-in
               </Link>
             </li>

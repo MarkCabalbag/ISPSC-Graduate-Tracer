@@ -328,7 +328,7 @@ export const Card = ({
   as: As = "section",
   ...rest
 }: { children: ReactNode; className?: string; as?: "section" | "div" | "article" } & Record<string, unknown>) => (
-  <As className={cx("rounded-lg border border-line bg-white", className)} {...rest}>
+  <As className={cx("min-w-0 rounded-lg border border-line bg-white", className)} {...rest}>
     {children}
   </As>
 );

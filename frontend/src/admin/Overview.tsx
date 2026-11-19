@@ -43,7 +43,7 @@ export default function Overview() {
   const totals = useMemo(() => sumRows(filtered), [filtered]);
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       <PageHeader
         rows={rows}
         year={year}
@@ -316,7 +316,7 @@ function CohortTable({ rows }: { rows: ProgramSummary[] }) {
           {data.length} {data.length === 1 ? "cohort" : "cohorts"} · select a row to see its respondents
         </span>
       </div>
-      <div className="overflow-x-auto">
+      <div className="relative overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-[15px]">
           <caption className="sr-only">Cohorts by graduation year and program, sortable</caption>
           <thead>

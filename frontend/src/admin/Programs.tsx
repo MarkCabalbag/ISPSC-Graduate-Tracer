@@ -10,7 +10,7 @@ export default function Programs() {
   const departments = data ?? [];
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6 [&>*]:min-w-0">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pt-6">
         <div>
           <h1 className="text-[28px] leading-9 font-bold tracking-[-0.02em]">Programs and colleges</h1>

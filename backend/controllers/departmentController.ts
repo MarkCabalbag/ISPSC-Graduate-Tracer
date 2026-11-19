@@ -30,7 +30,7 @@
  *
  * **Debugging guide**
  *
- * - A `400` response: check `parseDepartmentName` or `parseId`.
+ * - A `400` response: check `parseDepartmentName` or `parseIdParam`.
  * - A `404` or `409` response: it comes from an explicit check in the handler
  *   or from `handleError` (Prisma codes `P2025`, `P2002` and `P2003`).
  * - A `500` response: search the server log for `[department.controller]`. The
@@ -49,6 +49,8 @@ import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
+import { parseIdParam } from "../utils/validation.js";
+import { sendServerError } from "../utils/httpErrors.js";
 
 /* -------------------------------------------------------------------------- */
 /*                                  Constants                                 */
@@ -81,21 +83,6 @@ type DepartmentBody = {
 /* -------------------------------------------------------------------------- */
 /*                                   Helpers                                  */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Converts a URL parameter to a positive whole number.
- *
- * @param value - The raw URL parameter, for example `"12"`.
- * @returns The number, or `null` if it is missing or not a positive integer.
- */
-const parseId = (value: string | undefined): number | null => {
-  if (!value || !/^\d+$/.test(value)) {
-    return null;
-  }
-
-  const id = Number(value);
-  return Number.isSafeInteger(id) && id > 0 ? id : null;
-};
 
 /**
  * Validates a department name and normalizes it.
@@ -166,10 +153,7 @@ const handleError = (
   }
 
   // Replace with your logger (pino, winston) if the project has one.
-  console.error(`[department.controller] ${handlerName} failed:`, error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
+  sendServerError(res, `department.controller ${handlerName}`, error);
 };
 
 /* -------------------------------------------------------------------------- */
@@ -271,7 +255,7 @@ const editDepartment = asyncHandler(
     req: Request<{ id: string }, unknown, DepartmentBody>,
     res: Response,
   ) => {
-    const id = parseId(req.params.id);
+    const id = parseIdParam(req.params.id);
     if (id === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -340,7 +324,7 @@ const editDepartment = asyncHandler(
  */
 const removeDepartment = asyncHandler(
   async (req: Request<{ id: string }>, res: Response) => {
-    const id = parseId(req.params.id);
+    const id = parseIdParam(req.params.id);
     if (id === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -418,7 +402,7 @@ const departmentList = asyncHandler(async (_req: Request, res: Response) => {
  */
 const getRelatedProgram = asyncHandler(
   async (req: Request<{ departmentId: string }>, res: Response) => {
-    const departmentId = parseId(req.params.departmentId);
+    const departmentId = parseIdParam(req.params.departmentId);
     if (departmentId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;

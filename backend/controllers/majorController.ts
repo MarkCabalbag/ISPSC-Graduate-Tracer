@@ -38,7 +38,7 @@
  *
  * **Debugging guide**
  *
- * - A `400` response: check `parseMajorName` or `parseId`.
+ * - A `400` response: check `parseMajorName` or `parseIdParam`.
  * - A `404` or `409` response: it comes from an explicit check in the handler
  *   or from `handleError` (Prisma codes `P2025`, `P2002` and `P2003`).
  * - A `500` response: search the server log for `[major.controller]`. The line
@@ -58,6 +58,8 @@ import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
+import { parseIdParam } from "../utils/validation.js";
+import { sendServerError } from "../utils/httpErrors.js";
 
 
 /* -------------------------------------------------------------------------- */
@@ -91,21 +93,6 @@ type MajorBody = {
 /* -------------------------------------------------------------------------- */
 /*                                   Helpers                                  */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Converts a URL parameter to a positive whole number.
- *
- * @param value - The raw URL parameter, for example `"12"`.
- * @returns The number, or `null` if it is missing or not a positive integer.
- */
-const parseId = (value: string | undefined): number | null => {
-  if (!value || !/^\d+$/.test(value)) {
-    return null;
-  }
-
-  const id = Number(value);
-  return Number.isSafeInteger(id) && id > 0 ? id : null;
-};
 
 /**
  * Validates a major name and normalizes it.
@@ -175,10 +162,7 @@ const handleError = (
   }
 
   // Replace with your logger (pino, winston) if the project has one.
-  console.error(`[major.controller] ${handlerName} failed:`, error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
+  sendServerError(res, `major.controller ${handlerName}`, error);
 };
 
 /* -------------------------------------------------------------------------- */
@@ -222,7 +206,7 @@ const addMajor = asyncHandler(
     req: Request<{ programId: string }, unknown, MajorBody>,
     res: Response,
   ) => {
-    const programId = parseId(req.params.programId);
+    const programId = parseIdParam(req.params.programId);
     if (programId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -306,7 +290,7 @@ const editMajor = asyncHandler(
     req: Request<{ majorId: string }, unknown, MajorBody>,
     res: Response,
   ) => {
-    const majorId = parseId(req.params.majorId);
+    const majorId = parseIdParam(req.params.majorId);
     if (majorId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -385,7 +369,7 @@ const editMajor = asyncHandler(
  */
 const removeMajor = asyncHandler(
   async (req: Request<{ majorId: string }>, res: Response) => {
-    const majorId = parseId(req.params.majorId);
+    const majorId = parseIdParam(req.params.majorId);
     if (majorId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -461,7 +445,7 @@ const listMajor = asyncHandler(async (_req: Request, res: Response) => {
  */
 const getRelatedMajor = asyncHandler(
   async (req: Request<{ programId: string }>, res: Response) => {
-    const programId = parseId(req.params.programId);
+    const programId = parseIdParam(req.params.programId);
     if (programId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;

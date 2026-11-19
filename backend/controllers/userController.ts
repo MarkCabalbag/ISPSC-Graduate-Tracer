@@ -54,6 +54,7 @@ import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
+import { sendServerError } from "../utils/httpErrors.js";
 import {
   sendGraduateTracerEmail,
   type EmailContext,
@@ -247,10 +248,7 @@ const handleError = (
   }
 
   // Replace with your logger (pino, winston) if the project has one.
-  console.error(`[user.controller] ${handlerName} failed:`, error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
+  sendServerError(res, `user.controller ${handlerName}`, error);
 };
 
 /**

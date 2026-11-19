@@ -58,6 +58,7 @@
 import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import prisma from "../lib/prisma.js";
+import { sendServerError as sendUnexpectedError } from "../utils/httpErrors.js";
 
 
 /* -------------------------------------------------------------------------- */
@@ -223,13 +224,7 @@ const sendServerError = (
   res: Response,
   handlerName: string,
   error: unknown,
-): void => {
-  // Replace with your logger (pino, winston) if the project has one.
-  console.error(`[admin.controller] ${handlerName} failed:`, error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
-};
+): void => sendUnexpectedError(res, `admin.controller ${handlerName}`, error);
 
 /* -------------------------------------------------------------------------- */
 /*                                 Controllers                                */

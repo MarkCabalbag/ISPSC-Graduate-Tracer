@@ -42,7 +42,7 @@
  *
  * **Debugging guide**
  *
- * - A `400` response: check `parseProgramName` or `parseId`.
+ * - A `400` response: check `parseProgramName` or `parseIdParam`.
  * - A `404` or `409` response: it comes from an explicit check in the handler
  *   or from `handleError` (Prisma codes `P2025`, `P2002` and `P2003`).
  * - A `500` response: search the server log for `[program.controller]`. The
@@ -62,6 +62,8 @@ import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
+import { parseIdParam } from "../utils/validation.js";
+import { sendServerError } from "../utils/httpErrors.js";
 
 /* -------------------------------------------------------------------------- */
 /*                                  Constants                                 */
@@ -94,21 +96,6 @@ type ProgramBody = {
 /* -------------------------------------------------------------------------- */
 /*                                   Helpers                                  */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Converts a URL parameter to a positive whole number.
- *
- * @param value - The raw URL parameter, for example `"12"`.
- * @returns The number, or `null` if it is missing or not a positive integer.
- */
-const parseId = (value: string | undefined): number | null => {
-  if (!value || !/^\d+$/.test(value)) {
-    return null;
-  }
-
-  const id = Number(value);
-  return Number.isSafeInteger(id) && id > 0 ? id : null;
-};
 
 /**
  * Validates a program name and normalizes it.
@@ -179,10 +166,7 @@ const handleError = (
   }
 
   // Replace with your logger (pino, winston) if the project has one.
-  console.error(`[program.controller] ${handlerName} failed:`, error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
+  sendServerError(res, `program.controller ${handlerName}`, error);
 };
 
 /* -------------------------------------------------------------------------- */
@@ -226,7 +210,7 @@ const addProgram = asyncHandler(
     req: Request<{ departmentId: string }, unknown, ProgramBody>,
     res: Response,
   ) => {
-    const departmentId = parseId(req.params.departmentId);
+    const departmentId = parseIdParam(req.params.departmentId);
     if (departmentId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -309,7 +293,7 @@ const editProgram = asyncHandler(
     req: Request<{ programId: string }, unknown, ProgramBody>,
     res: Response,
   ) => {
-    const programId = parseId(req.params.programId);
+    const programId = parseIdParam(req.params.programId);
     if (programId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;
@@ -379,7 +363,7 @@ const editProgram = asyncHandler(
  */
 const removeProgram = asyncHandler(
   async (req: Request<{ programId: string }>, res: Response) => {
-    const programId = parseId(req.params.programId);
+    const programId = parseIdParam(req.params.programId);
     if (programId === null) {
       res.status(400).json({ message: INVALID_ID_MESSAGE });
       return;

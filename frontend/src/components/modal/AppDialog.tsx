@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks -- see "HOOKS NOTE" in the header */
 /**
  * =============================================================================
  * AppModal.tsx — ONE modal for the whole admin side

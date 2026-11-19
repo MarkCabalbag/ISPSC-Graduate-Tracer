@@ -23,7 +23,7 @@ const Form = () => {
 
   useEffect(() => {
     handleEmailChange(email);
-  }, [email]);
+  }, [email, handleEmailChange]);
 
   return (
     <div className="min-h-screen bg-neutral-50 pb-16">

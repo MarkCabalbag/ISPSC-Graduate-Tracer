@@ -184,7 +184,7 @@ const Dashboard = () => {
               }
               columns={columns}
               data={data}
-              onRowClick={(row: any) =>
+              onRowClick={(row) =>
                 navigate(`/graduates/${row?.yearOfGraduation}/${row?.program}`)
               }
             />

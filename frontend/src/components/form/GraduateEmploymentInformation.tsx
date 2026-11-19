@@ -196,8 +196,6 @@ const GraduateEmploymentInformation = () => {
   /** Sends the survey to the API; resets the form only on success. */
   const handleSubmit = async () => {
     try {
-      if (majors?.length === 0) {
-      }
       await addResponse({
         yearOfSurvey: parseInt(yearOfSurvey),
         email: email,

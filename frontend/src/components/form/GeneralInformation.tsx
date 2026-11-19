@@ -107,7 +107,7 @@ const GeneralInformation = () => {
   /* ----- Effects: sync local name to the store ---------------------------- */
   useEffect(() => {
     handleNameChange(name);
-  }, [name]);
+  }, [name, handleNameChange]);
 
   /* ----- Render ----------------------------------------------------------- */
   return (

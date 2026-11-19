@@ -472,7 +472,7 @@ const addResponse = asyncHandler(
 
       if (!emailResult.success) {
         console.error(
-          `[user.controller] addResponse email not sent to ${email}: ${emailResult.message}`,
+          `[user.controller] addResponse confirmation email not sent: ${emailResult.message}`,
         );
       }
 

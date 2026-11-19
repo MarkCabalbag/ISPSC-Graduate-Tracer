@@ -185,10 +185,14 @@ export const sendGraduateTracerEmail = async (
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("[email] Sent successfully:", info.response);
+    console.log("[email] Sent successfully, accepted:", info.accepted.length);
     return { success: true, message: "Email sent successfully!" };
   } catch (error) {
-    console.error("[email] Failed to send email:", error);
+    // Log only the error name/code: the full error can contain the recipient address.
+    console.error(
+      "[email] Failed to send email:",
+      error instanceof Error ? error.name : "unknown error",
+    );
     return { success: false, message: "Failed to send email." };
   }
 };

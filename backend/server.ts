@@ -63,6 +63,8 @@ import cookieParser from "cookie-parser";
 import authRouter from "./routes/authRouter.js";
 import { generalLimiter } from "./middleware/rateLimiters.js";
 import { getJwtSecret } from "./middleware/requireAdmin.js";
+import noStore from "./middleware/noStore.js";
+import { assertEnvironment } from "./lib/env.js";
 import departmentRouter from "./routes/departmentRouter.js";
 import programRouter from "./routes/programRouter.js";
 import majorRouter from "./routes/majorRouter.js";
@@ -121,7 +123,8 @@ const parsePort = (value: string | undefined): number => {
 /*                                     App                                    */
 /* -------------------------------------------------------------------------- */
 
-// Stop the server at startup if the token secret is missing or too short.
+// Stop the server at startup if required settings are missing or malformed.
+assertEnvironment();
 getJwtSecret();
 
 const app = express();
@@ -144,9 +147,12 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "100kb" }));
-app.use(express.urlencoded({ extended: true, limit: "100kb" }));
 app.use(cookieParser());
 app.use(BASE_URL, generalLimiter);
+
+// Admin and session responses carry personal data: never cache them.
+app.use(`${BASE_URL}/auth`, noStore);
+app.use(`${BASE_URL}/admin`, noStore);
 
 app.use(`${BASE_URL}/auth`, authRouter);
 app.use(`${BASE_URL}/department`, departmentRouter);

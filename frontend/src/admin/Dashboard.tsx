@@ -137,7 +137,7 @@ const itemVariants = {
 
 const Dashboard = () => {
   /* ----- Data ------------------------------------------------------------- */
-  const { data, isFetching } = useGetSummaryData();
+  const { data, isFetching, isError, refetch } = useGetSummaryData();
   const { data: departments = [] } = useGetDepartmentDetails();
 
   /* ----- Routing ---------------------------------------------------------- */
@@ -163,6 +163,14 @@ const Dashboard = () => {
           // Loading state
           <Card className="w-[100%] h-[300px] flex justify-center items-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+          </Card>
+        ) : isError ? (
+          <Card
+            role="alert"
+            className="w-[100%] p-6 flex flex-col items-center gap-3 text-center"
+          >
+            <p>The employability data could not be loaded.</p>
+            <Button onClick={() => refetch()}>Try again</Button>
           </Card>
         ) : (
           <motion.div

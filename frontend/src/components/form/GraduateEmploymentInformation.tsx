@@ -90,7 +90,7 @@
  *      page uses the same ids, label clicks may target the wrong input.
  *   6. Heading styles differ between sections (text-md font-bold vs
  *      text-lg font-medium).
- *   7. There is no required-field validation before Submit.
+ *   7. Required fields are checked before Submit; a toast lists what is missing.
  *
  * DEPENDENCIES
  * ------------
@@ -114,6 +114,7 @@ import {
 } from "../ui/select";
 
 import { Loader2Icon } from "lucide-react";
+import toast from "react-hot-toast";
 import { Button } from "../ui/button";
 import RelevanceOfEmployment from "./RelevanceOfEmployment";
 import EmployementSector from "./EmployementSector";
@@ -195,6 +196,27 @@ const GraduateEmploymentInformation = () => {
 
   /** Sends the survey to the API; resets the form only on success. */
   const handleSubmit = async () => {
+    // Check the required answers first, so the graduate gets a clear message
+    // instead of a generic server error.
+    const missing: string[] = [];
+    if (!email.trim()) missing.push("email");
+    if (!yearOfSurvey) missing.push("year of survey");
+    if (!fullName.trim()) missing.push("full name");
+    if (!yearOfGraduation) missing.push("year of graduation");
+    if (!departmentId) missing.push("department");
+    if (!programId) missing.push("program");
+    if (!isEmployed) missing.push("employment status");
+    if (!isJobAligned) missing.push("job relevance");
+    if (!isSelfEmployed) missing.push("self-employment");
+    if (!isFurtherStudies) missing.push("further studies");
+    if (!typeOfOrganization) missing.push("type of organization");
+    if (!currentJobLocated) missing.push("job location");
+
+    if (missing.length > 0) {
+      toast.error(`Please complete: ${missing.join(", ")}.`);
+      return;
+    }
+
     try {
       await addResponse({
         yearOfSurvey: parseInt(yearOfSurvey),

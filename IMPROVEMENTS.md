@@ -44,11 +44,28 @@ This document describes what changed in each phase, what was deliberately left a
 - GitHub Actions workflow (`.github/workflows/ci.yml`): install, lint, type-check, test, build for both packages on every pull request.
 - Root `README.md` (setup, environment variables, deployment, contributing, screenshots placeholder), MIT `LICENSE`, root `.gitignore`.
 
+### Phase 6: Frontend redesign (UI, UX, accessibility, performance)
+
+Driven with the three design skills (Impeccable, Google's Modern Web Guidance, the taste skill). You rejected the stock shadcn look and two first mockups as generic, then chose **"the category standard, executed at full craft"** in an Impeccable decision round, with GOV.UK/GOV.PH services and the Vercel dashboard as the quality bar. `PRODUCT.md` records the product; `DESIGN.md` records the shipped system.
+
+- **New design system** (`src/index.css`): white and gray-50 grounds, one maroon accent, gold as the second data series, semantic tokens, focus/selection themed. **Source Sans 3 self-hosted** (woff2, preloaded), so the render-blocking Google Fonts request is gone and the CSP no longer needs a font origin. The 346 KB seal PNG became a 6 KB WebP plus a real `favicon.ico`.
+- **Native-first component kit** (`src/components/kit.tsx`): buttons, fields, radios, error summary, chips, skeletons, empty/error states — all built on native elements with a full state set (hover, focus, disabled, loading, error).
+- **Charts in HTML/CSS** (`src/components/charts.tsx`), no chart library: every bar is labelled with its value, color is never the only cue, each has a text description. This removed Recharts.
+- **Public survey** rebuilt to the GOV.UK pattern: privacy notice and consent first (can't be skipped), one topic per page with a progress step, inline validation with an error summary that focuses and links each field, conditionally revealed questions, a check-your-answers page, a draft saved in `sessionStorage`, and a confirmation page (no more full-page reload).
+- **Admin** rebuilt: a figure-led Overview with employment-by-program and sector charts and a sortable cohorts table; a Respondents page with search, filters, sortable columns, paging, CSV export, an editable total-graduates field and a native `<dialog>` delete confirmation; a Programs and colleges page (the CRUD tree, off the dashboard). Year/program filters live in the URL so a view can be shared by link. Old routes redirect (`/form` → `/survey`, `/graduates/:year/:program` → Respondents).
+- **Sample-data preview** (`npm run preview:demo`, `VITE_MOCK_API`): an in-browser mock API with clearly fake records so every admin screen can be seen without a backend; excluded from the production build, backend untouched. Preview sign-in: `admin` / `preview`.
+- **Removed 22 runtime dependencies** (all of Radix, Recharts, Motion, `xlsx`, TanStack Table, Zustand, clsx, tailwind-merge, cva, lucide, tailwindcss-animate). `npm audit --omit=dev` is now **0 vulnerabilities** (the unfixable `xlsx` advisory is gone).
+- **Accessibility**: WCAG AA, keyboard and screen-reader paths throughout, 44px touch targets, `aria-sort`, focus management on step change and on errors, `prefers-reduced-motion` respected. Lighthouse accessibility is **100** on every public page.
+- **Performance**: the single 1.39 MB bundle became a 343 KB main chunk (110 KB gzip) plus small lazy route chunks. Lighthouse (mobile, production build) rose from baseline **71/93/96/83, 81/100/92/83, 94/96/96/82** (home/survey/login, perf/a11y/best-practices/SEO) to **95/100/96/100, 87/100/96/100, 94/100/96/100**. Home LCP fell from 9.5 s to 1.8 s.
+- **Checks**: Impeccable's mechanical detector is clean on the source and on the rendered pages; the Modern Web Guidance legacy scan is clean (its two `toSorted()` suggestions were applied, Baseline). Type-check, lint (0 errors) and all tests pass.
+
 ## Deliberately left alone
 
 | Item | Why |
 | --- | --- |
-| Database schema (nullable columns, string answers instead of enums, indexes, unique email, consent columns) | Needs a migration; you chose to skip it for now. |
+| Database schema (nullable columns, string answers instead of enums, indexes, unique email, consent columns) | Needs a migration; you chose to skip it for now. The redesigned survey shows and requires a consent checkbox, but it is still not stored with the response — storing it needs that schema change. |
+| Salary and time-to-employment questions/charts | The survey does not collect them; adding them is an API and schema change. |
+| The old frontend tests for removed screens | Deleted with their components; replaced by new survey and login tests. The backend's 75 tests are unchanged. |
 | Salary, time-to-employment charts | The survey does not collect this data; needs new questions and columns. |
 | Database audit table, graduate self-update links | Need new tables and a public token endpoint (API contract change). |
 | API field names with typos (`untTracedPercentage`, `OverviewRowGaduates`) | Renaming breaks the existing contract. |
@@ -81,3 +98,6 @@ This document describes what changed in each phase, what was deliberately left a
 - **Test with real data once:** the analytics, CSV export, charts and the nodemailer upgrade were verified against mocks only. Open the dashboard, export a CSV, and submit one survey after deploying.
 - **License:** MIT was chosen with the holder "ISPSC Graduate Tracer contributors". Change it in `LICENSE` if the college requires another license or a named holder.
 - **Enable CI:** push the branch and open a pull request; the workflow runs automatically. Consider requiring it for merges to `main`.
+- **See the redesign:** `cd frontend && npm run preview:demo` runs every screen against sample data (admin sign-in `admin` / `preview`). This mode is dev-only and never ships. To run the real app, `npm run dev` with the backend up.
+- **Store consent (RA 10173):** the survey now requires a consent checkbox, but it is not saved with the response. Saving it needs the deferred schema change (`consentGivenAt` / `consentVersion`).
+- **Confirm the brand colours** (`DESIGN.md`): maroon `#7d1128` and gold `#c99a2e` are assumed from the seal and the old site. Replace with the college's official values if they differ.

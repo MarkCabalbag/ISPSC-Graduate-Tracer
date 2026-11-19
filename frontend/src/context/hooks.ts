@@ -234,8 +234,9 @@ export const useGetGraduatesPerRow = (
   program: string
 ) => {
   return useQuery({
-    queryKey: ["graduatesPerRow"],
+    queryKey: ["graduatesPerRow", yearOfGraduation, program],
     queryFn: () => client.admin.getGraduates(Number(yearOfGraduation), program),
+    enabled: Boolean(yearOfGraduation && program),
   });
 };
 
@@ -244,8 +245,9 @@ export const useGetTotalGraduates = (
   program: string
 ) => {
   return useQuery({
-    queryKey: ["totalGraduates"],
+    queryKey: ["totalGraduates", yearOfGraduation, program],
     queryFn: () => client.admin.getTotalGraduates(yearOfGraduation, program),
+    enabled: Boolean(yearOfGraduation && program),
   });
 };
 

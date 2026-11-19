@@ -66,11 +66,14 @@
  * =============================================================================
  */
 
+import { useId } from "react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { useFormStore } from "../../context/store";
 
 const LocationOfEmployment = () => {
+  // Unique prefix so ids do not clash with other radio groups on the page.
+  const uid = useId();
   /* ----- Store ------------------------------------------------------------ */
   const { handleCurrentJobLocation } = useFormStore();
 
@@ -84,22 +87,22 @@ const LocationOfEmployment = () => {
 
       <div>
         {/* Question */}
-        <h1 className="text-md font-bold text-gray-700 mb-3">
+        <h1 id={`${uid}-q1`} className="text-md font-bold text-gray-700 mb-3">
           Where is your current job located?
         </h1>
 
         {/* Options: selection is reported to the store on change */}
-        <RadioGroup onValueChange={(value) => handleCurrentJobLocation(value)}>
+        <RadioGroup aria-labelledby={`${uid}-q1`} onValueChange={(value) => handleCurrentJobLocation(value)}>
           {/* Option: Locally */}
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="locally" id="locally" />
-            <Label htmlFor="locally">Locally</Label>
+            <RadioGroupItem value="locally" id={`${uid}-q1-locally`} />
+            <Label htmlFor={`${uid}-q1-locally`}>Locally</Label>
           </div>
 
           {/* Option: Abroad */}
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="abroad" id="abroad" />
-            <Label htmlFor="abroad">Abroad</Label>
+            <RadioGroupItem value="abroad" id={`${uid}-q1-abroad`} />
+            <Label htmlFor={`${uid}-q1-abroad`}>Abroad</Label>
           </div>
         </RadioGroup>
       </div>

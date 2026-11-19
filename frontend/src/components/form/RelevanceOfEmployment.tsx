@@ -73,11 +73,14 @@
  * =============================================================================
  */
 
+import { useId } from "react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { useFormStore } from "../../context/store";
 
 const RelevanceOfEmployment = () => {
+  // Unique prefix so ids do not clash with other radio groups on the page.
+  const uid = useId();
   /* ----- Store ------------------------------------------------------------ */
   const { handleAlignedJob, handleSelfEmployed, handleFurtherStudies } =
     useFormStore();
@@ -92,51 +95,51 @@ const RelevanceOfEmployment = () => {
 
       {/* ===== Question 1: Job aligned with program -> handleAlignedJob ===== */}
       <div>
-        <h1 className="text-md font-bold text-gray-700 mb-3">
+        <h1 id={`${uid}-q1`} className="text-md font-bold text-gray-700 mb-3">
           Is your job aligned with your program?
         </h1>
-        <RadioGroup onValueChange={(value) => handleAlignedJob(value)}>
+        <RadioGroup aria-labelledby={`${uid}-q1`} onValueChange={(value) => handleAlignedJob(value)}>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="yes" />
-            <Label htmlFor="yes">Yes</Label>
+            <RadioGroupItem value="yes" id={`${uid}-q1-yes`} />
+            <Label htmlFor={`${uid}-q1-yes`}>Yes</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="no" id="no" />
-            <Label htmlFor="no">No</Label>
+            <RadioGroupItem value="no" id={`${uid}-q1-no`} />
+            <Label htmlFor={`${uid}-q1-no`}>No</Label>
           </div>
         </RadioGroup>
       </div>
 
       {/* ===== Question 2: Self-employed -> handleSelfEmployed ============== */}
       <div>
-        <h1 className="text-md font-bold text-gray-700 mb-3">
+        <h1 id={`${uid}-q2`} className="text-md font-bold text-gray-700 mb-3">
           Are you self-employed
         </h1>
-        <RadioGroup onValueChange={(value) => handleSelfEmployed(value)}>
+        <RadioGroup aria-labelledby={`${uid}-q2`} onValueChange={(value) => handleSelfEmployed(value)}>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="yes" />
-            <Label htmlFor="yes">Yes</Label>
+            <RadioGroupItem value="yes" id={`${uid}-q2-yes`} />
+            <Label htmlFor={`${uid}-q2-yes`}>Yes</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="no" id="no" />
-            <Label htmlFor="no">No</Label>
+            <RadioGroupItem value="no" id={`${uid}-q2-no`} />
+            <Label htmlFor={`${uid}-q2-no`}>No</Label>
           </div>
         </RadioGroup>
       </div>
 
       {/* ===== Question 3: Further studies -> handleFurtherStudies ========= */}
       <div>
-        <h1 className="text-md font-bold text-gray-700 mb-3">
+        <h1 id={`${uid}-q3`} className="text-md font-bold text-gray-700 mb-3">
           Are your currently enrolled in further studies?
         </h1>
-        <RadioGroup onValueChange={(value) => handleFurtherStudies(value)}>
+        <RadioGroup aria-labelledby={`${uid}-q3`} onValueChange={(value) => handleFurtherStudies(value)}>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="yes" id="yes" />
-            <Label htmlFor="yes">Yes</Label>
+            <RadioGroupItem value="yes" id={`${uid}-q3-yes`} />
+            <Label htmlFor={`${uid}-q3-yes`}>Yes</Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="no" id="no" />
-            <Label htmlFor="no">No</Label>
+            <RadioGroupItem value="no" id={`${uid}-q3-no`} />
+            <Label htmlFor={`${uid}-q3-no`}>No</Label>
           </div>
         </RadioGroup>
       </div>

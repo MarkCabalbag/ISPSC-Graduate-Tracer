@@ -114,6 +114,7 @@ import {
 } from "../ui/select";
 
 import { Loader2Icon } from "lucide-react";
+import { useId } from "react";
 import toast from "react-hot-toast";
 import { Button } from "../ui/button";
 import RelevanceOfEmployment from "./RelevanceOfEmployment";
@@ -133,6 +134,7 @@ const RELOAD_DELAY_MS = 2000;
  * ---------------------------------------------------------------------------*/
 
 const GraduateEmploymentInformation = () => {
+  const employedId = useId();
   /* ----- Data: department list ------------------------------------------- */
   const { data: department, isLoading: isDepartmentLoading } =
     hooks.useGetCollegeDepartment();
@@ -352,20 +354,24 @@ const GraduateEmploymentInformation = () => {
 
         {/* ===== 4. Employment Status Section ============================== */}
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-md font-bold text-gray-700 mb-3">
+          <h2
+            id={`${employedId}-label`}
+            className="text-md font-bold text-gray-700 mb-3"
+          >
             Are you currently employed?
           </h2>
           <RadioGroup
+            aria-labelledby={`${employedId}-label`}
             onValueChange={(value) => handleEmployedChange(value)}
             className="space-y-3"
           >
             <div className="flex items-center space-x-3">
-              <RadioGroupItem value="yes" id="yes" />
-              <Label htmlFor="yes">Yes</Label>
+              <RadioGroupItem value="yes" id={`${employedId}-yes`} />
+              <Label htmlFor={`${employedId}-yes`}>Yes</Label>
             </div>
             <div className="flex items-center space-x-3">
-              <RadioGroupItem value="no" id="no" />
-              <Label htmlFor="no">No</Label>
+              <RadioGroupItem value="no" id={`${employedId}-no`} />
+              <Label htmlFor={`${employedId}-no`}>No</Label>
             </div>
           </RadioGroup>
 

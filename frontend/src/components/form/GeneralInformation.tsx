@@ -64,7 +64,6 @@
  *      listed (an eslint react-hooks/exhaustive-deps warning is expected).
  *   4. The year dropdown is uncontrolled (no value bound to the store), so a
  *      saved year is not pre-selected if the component is remounted.
- *   5. The <label> elements are not linked to their inputs (no htmlFor/id).
  *
  * DEPENDENCIES
  * ------------
@@ -120,10 +119,12 @@ const GeneralInformation = () => {
       <div className="grid md:grid-cols-2 gap-8">
         {/* Field: Full Name */}
         <div className="space-y-2">
-          <label className="text-md font-bold text-gray-700 mb-3">
+          <label htmlFor="survey-fullname" className="text-md font-bold text-gray-700 mb-3">
             Full Name
           </label>
           <Input
+            id="survey-fullname"
+            autoComplete="name"
             placeholder="Ex (Juan D. Cruz)"
             type="text"
             name="name"
@@ -135,11 +136,11 @@ const GeneralInformation = () => {
 
         {/* Field: Year of Graduation */}
         <div className="space-y-2">
-          <label className="text-md font-bold text-gray-700 mb-3">
+          <label htmlFor="survey-graduation-year" className="text-md font-bold text-gray-700 mb-3">
             Year of Graduation
           </label>
           <Select onValueChange={(value) => handleGraduationChange(value)}>
-            <SelectTrigger className="w-full focus:ring-2 focus:ring-primary/50 transition-all">
+            <SelectTrigger id="survey-graduation-year" className="w-full focus:ring-2 focus:ring-primary/50 transition-all">
               <SelectValue placeholder="Select Year of Survey" />
             </SelectTrigger>
             <SelectContent>

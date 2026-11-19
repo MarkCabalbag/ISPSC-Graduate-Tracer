@@ -40,10 +40,13 @@ const Form = () => {
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-semibold text-neutral-700 block mb-2">Email Address</label>
+              <label htmlFor="survey-email" className="text-sm font-semibold text-neutral-700 block mb-2">Email Address</label>
               <Input
+                id="survey-email"
                 type="email"
                 name="email"
+                autoComplete="email"
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="e.g., student@ispsc.edu.ph"
@@ -52,11 +55,11 @@ const Form = () => {
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-neutral-700 block mb-2">
+              <label htmlFor="survey-year" className="text-sm font-semibold text-neutral-700 block mb-2">
                 Year of Survey
               </label>
               <Select onValueChange={(value) => handleSurveyChange(value)}>
-                <SelectTrigger className="w-full border-neutral-300 focus:border-primary focus:ring-primary h-11">
+                <SelectTrigger id="survey-year" className="w-full border-neutral-300 focus:border-primary focus:ring-primary h-11">
                   <SelectValue placeholder="Select Year of Survey" />
                 </SelectTrigger>
                 <SelectContent>

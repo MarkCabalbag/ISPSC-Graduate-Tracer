@@ -19,7 +19,7 @@
  *     Called every time the selected radio option changes. `value` is one of:
  *       "government"
  *       "private institution"
- *       "entreprenueral / freelance"
+ *       "entrepreneurial / freelance"
  *   The RadioGroup is UNCONTROLLED: it keeps its own selection internally and
  *   only reports changes to the store (it does not read the saved value back).
  *
@@ -68,11 +68,14 @@
  * =============================================================================
  */
 
+import { useId } from "react";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import { Label } from "../ui/label";
 import { useFormStore } from "../../context/store";
 
 const EmployementSector = () => {
+  // Unique prefix so ids do not clash with other radio groups on the page.
+  const uid = useId();
   /* ----- Store ------------------------------------------------------------ */
   const { handleTypeOfOrganization } = useFormStore();
 
@@ -86,34 +89,34 @@ const EmployementSector = () => {
 
       <div>
         {/* Question */}
-        <h1 className="text-md font-bold text-gray-700 mb-3">
+        <h1 id={`${uid}-q1`} className="text-md font-bold text-gray-700 mb-3">
           What type of organization do you work for?
         </h1>
 
         {/* Options: selection is reported to the store on change */}
-        <RadioGroup onValueChange={(value) => handleTypeOfOrganization(value)}>
+        <RadioGroup aria-labelledby={`${uid}-q1`} onValueChange={(value) => handleTypeOfOrganization(value)}>
           {/* Option: Government */}
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="government" id="government" />
-            <Label htmlFor="government">Government</Label>
+            <RadioGroupItem value="government" id={`${uid}-q1-government`} />
+            <Label htmlFor={`${uid}-q1-government`}>Government</Label>
           </div>
 
           {/* Option: Private Institution */}
           <div className="flex items-center space-x-2">
             <RadioGroupItem
               value="private institution"
-              id="private institution"
+              id={`${uid}-q1-privateinstitution`}
             />
-            <Label htmlFor="private institution">Private Institution</Label>
+            <Label htmlFor={`${uid}-q1-privateinstitution`}>Private Institution</Label>
           </div>
 
           {/* Option: Entreprenueral / Freelance */}
           <div className="flex items-center space-x-2">
             <RadioGroupItem
-              value="entreprenueral / freelance"
-              id="entreprenueral / freelance"
+              value="entrepreneurial / freelance"
+              id={`${uid}-q1-entreprenueralfreelance`}
             />
-            <Label htmlFor="entreprenueral / freelance">
+            <Label htmlFor={`${uid}-q1-entreprenueralfreelance`}>
               Entreprenueral / Freelance
             </Label>
           </div>

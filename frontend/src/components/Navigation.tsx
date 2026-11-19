@@ -20,11 +20,10 @@
  *
  * LOGOUT
  * ------
- *   Removes the "ispsc_admin_auth" flag from localStorage and goes to
- *   "/admin/login".
- *   NOTE: this flag only decides what the UI shows. It is not security. Anyone
- *   can set it in the browser. Real protection of admin pages and data must be
- *   done by the server (session / token checks).
+ *   Calls `logout()` from the auth context, which asks the server to clear the
+ *   HttpOnly session cookie, then goes to "/admin/login". Whether the admin is
+ *   signed in comes from `useAuth()` (the server's answer), not from browser
+ *   storage. The UI only decides what to show: the server protects the data.
  *
  * HOW TO ADD A LINK
  * -----------------
@@ -56,10 +55,9 @@ import {
 } from "lucide-react";
 import logo from "../assets/ispsc.png";
 import { Button } from "./ui/button";
+import { ADMIN_LOGIN_PATH, useAuth } from "../admin/auth/auth-context";
 
-const ADMIN_AUTH_KEY = "ispsc_admin_auth";
 const SURVEY_PATH = "/form";
-const ADMIN_LOGIN_PATH = "/admin/login";
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
 
@@ -69,29 +67,14 @@ const NAV_LINKS: NavItem[] = [
   { to: SURVEY_PATH, label: "Tracer Survey", icon: GraduationCap },
 ];
 
-/**
- * Reads the admin flag. localStorage can throw (private mode, blocked
- * storage), and that must not break the whole page.
- */
-const isAdminLoggedIn = (): boolean => {
-  try {
-    return localStorage.getItem(ADMIN_AUTH_KEY) === "true";
-  } catch {
-    return false;
-  }
-};
-
 const Navigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAdminAuth = isAdminLoggedIn();
+  const { isAuthenticated: isAdminAuth, logout } = useAuth();
 
-  const handleLogout = () => {
-    try {
-      localStorage.removeItem(ADMIN_AUTH_KEY);
-    } catch {
-      // Storage is not available, so there is nothing to clear.
-    }
+  // Ends the server session (clears the HttpOnly cookie), then leaves the page.
+  const handleLogout = async () => {
+    await logout();
     navigate(ADMIN_LOGIN_PATH);
   };
 

@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "format": "prettier --write src",
-    "format:check": "prettier --check src"
+    "format:check": "prettier --check src",
+    "test": "vitest run"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
@@ -45,6 +46,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@testing-library/jest-dom": "^8.0.0",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.13",
     "@types/node": "^22.13.8",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
@@ -53,9 +57,11 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
+    "jsdom": "^31.0.1",
     "prettier": "^3.10.1",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^5.1.1"
   }
 }

@@ -31,13 +31,13 @@ describe("Admin login page", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toHaveAttribute(
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
       "type",
       "password",
     );
-    expect(screen.getByRole("alert")).toHaveTextContent(
-      /enter your username and password/i,
-    );
+    const summary = screen.getByRole("alert");
+    expect(summary).toHaveTextContent(/enter your username/i);
+    expect(summary).toHaveTextContent(/enter your password/i);
     expect(login).not.toHaveBeenCalled();
   });
 
@@ -46,24 +46,24 @@ describe("Admin login page", () => {
     renderLogin(login);
 
     await userEvent.type(screen.getByLabelText(/username/i), "  admin ");
-    await userEvent.type(screen.getByLabelText(/password/i), "secret");
+    await userEvent.type(screen.getByLabelText("Password"), "secret");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => expect(login).toHaveBeenCalledWith("admin", "secret"));
   });
 
-  it("shows the server's message when sign-in fails", async () => {
+  it("says plainly when the username or password is wrong", async () => {
     const login = vi
       .fn()
       .mockRejectedValue(new ApiError(401, "Invalid username or password"));
     renderLogin(login);
 
     await userEvent.type(screen.getByLabelText(/username/i), "admin");
-    await userEvent.type(screen.getByLabelText(/password/i), "wrong");
+    await userEvent.type(screen.getByLabelText("Password"), "wrong");
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Invalid username or password",
+      "The username or password is not correct",
     );
   });
 });

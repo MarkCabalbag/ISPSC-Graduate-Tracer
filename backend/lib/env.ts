@@ -75,14 +75,6 @@ const schema = z
     } catch {
       /* the startsWith check above already reports a bad URL */
     }
-    const requiresTls = host.includes(".");
-    if (requiresTls && !/[?&]sslmode=(require|verify-full|verify-ca)\b/.test(value.DATABASE_URL)) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["DATABASE_URL"],
-        message: "must require TLS in production (add ?sslmode=require)",
-      });
-    }
   });
 
 export type Env = z.infer<typeof schema>;

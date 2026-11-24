@@ -20,6 +20,8 @@ export const ADMIN_HOME_PATH = "/admin";
 export type AuthContextValue = {
   /** `true` while the server accepts the admin's session. */
   isAuthenticated: boolean;
+  /** The signed-in admin's username, or null when not known. */
+  username: string | null;
   /**
    * `true` until the first check with the server is done. The session cookie
    * cannot be read by the page, so the server has to be asked. Show nothing, or

@@ -14,7 +14,7 @@ const isPreview = import.meta.env.VITE_MOCK_API === "true";
 
 /** The MIS office's shell: one top bar with the navigation, then the page on the gray band. */
 export default function AdminLayout() {
-  const { logout } = useAuth();
+  const { logout, username } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
@@ -68,9 +68,9 @@ export default function AdminLayout() {
             {isPreview && <Chip>Sample data</Chip>}
             <span className="hidden items-center gap-2 text-[15px] font-medium text-ink-2 sm:flex">
               <span aria-hidden="true" className="grid size-7 place-items-center rounded-md border border-line bg-band text-[11px] font-bold text-muted-foreground">
-                MIS
+                {(username ?? "MIS").slice(0, 2).toUpperCase()}
               </span>
-              MIS office
+              <span className="max-w-[16ch] truncate">{username ?? "MIS office"}</span>
             </span>
             <Button size="sm" variant="ghost" onClick={signOut}>
               Sign out

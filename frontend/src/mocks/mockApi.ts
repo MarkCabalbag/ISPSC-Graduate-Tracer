@@ -192,7 +192,11 @@ export const mockRequest = async (method: string, path: string, body?: unknown):
     }
     if (action === "me") {
       requireAdmin();
-      return { authenticated: true, expiresAt: Number(sessionStorage.getItem(SESSION_KEY)) };
+      return {
+        authenticated: true,
+        expiresAt: Number(sessionStorage.getItem(SESSION_KEY)),
+        username: "admin",
+      };
     }
   }
 

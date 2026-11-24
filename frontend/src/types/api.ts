@@ -32,6 +32,8 @@ export type SessionInfo = {
   authenticated: boolean;
   /** End of the session, in milliseconds since 1970. */
   expiresAt: number;
+  /** The signed-in admin's username, or null. */
+  username: string | null;
 };
 
 /* --------------------------- Departments and more -------------------------- */

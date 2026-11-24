@@ -4,7 +4,9 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { client } from "../api/client";
 import { ApiError } from "../api/http";
 import { Button, ErrorSummary, Radios, SelectField, Skeleton, TextField, type SummaryError } from "../components/kit";
-import SiteLayout, { BackLink } from "./SiteLayout";
+import { BackLink } from "./SiteLayout";
+import SurveyShell from "./SurveyShell";
+import { NUMBERED, STEPS, TITLES, type Step } from "./surveySteps";
 import { PrivacyPoints } from "./PrivacyNotice";
 
 /* ----------------------------------- model ----------------------------------- */
@@ -42,17 +44,6 @@ const EMPTY: Answers = {
 };
 
 const STORAGE_KEY = "ispsc-tracer-survey";
-const STEPS = ["privacy", "about", "degree", "work", "check", "done"] as const;
-type Step = (typeof STEPS)[number];
-const NUMBERED: Partial<Record<Step, number>> = { about: 1, degree: 2, work: 3 };
-const TITLES: Record<Step, string> = {
-  privacy: "Before you start",
-  about: "About you",
-  degree: "Your degree",
-  work: "Your work",
-  check: "Check your answers",
-  done: "Survey complete",
-};
 
 const THIS_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: THIS_YEAR - 1979 }, (_, i) => String(THIS_YEAR - i));
@@ -246,15 +237,14 @@ export default function Survey() {
   const number = NUMBERED[step];
 
   return (
-    <SiteLayout>
-      <div className="max-w-[640px]">
+    <SurveyShell step={step}>
         <BackLink onClick={back} />
         <form onSubmit={onContinue} noValidate className="grid gap-8">
           {summary.length > 0 && <ErrorSummary ref={summaryRef} errors={summary} />}
 
           <div className="grid gap-2">
             {number && (
-              <p className="text-[17px] text-muted-foreground">
+              <p className="hidden text-[17px] text-muted-foreground lg:block">
                 Step {number} of 3 <span className="sr-only">: {TITLES[step]}</span>
               </p>
             )}
@@ -286,7 +276,7 @@ export default function Survey() {
           )}
 
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <Button type="submit" variant="primary" size="lg" loading={submit.isPending}>
+            <Button type="submit" variant="primary" size="lg" full className="sm:w-auto" loading={submit.isPending}>
               {step === "check" ? "Submit the survey" : step === "privacy" ? "Agree and continue" : "Continue"}
             </Button>
             {step === "check" && (
@@ -294,8 +284,7 @@ export default function Survey() {
             )}
           </div>
         </form>
-      </div>
-    </SiteLayout>
+    </SurveyShell>
   );
 }
 
@@ -309,7 +298,7 @@ function PrivacyStep({ answers, update, error }: { answers: Answers; update: Ste
       <p className="text-[19px] text-ink-2">
         This survey takes about 5 minutes. Read how the college uses your answers before you begin.
       </p>
-      <div className="border-l-[6px] border-brand bg-band p-5">
+      <div className="rounded-lg border border-line bg-band px-6 py-5">
         <h2 className="mb-4 text-[19px] font-bold">Privacy notice</h2>
         <PrivacyPoints />
       </div>
@@ -320,14 +309,14 @@ function PrivacyStep({ answers, update, error }: { answers: Answers; update: Ste
             {error}
           </p>
         )}
-        <label className="flex cursor-pointer items-start gap-3 text-[17px]">
+        <label className="flex cursor-pointer items-start gap-3.5 rounded-md border-2 border-line-strong bg-white px-4 py-3.5 text-[17px] transition-colors hover:border-ink-2 has-checked:border-brand has-checked:bg-brand-50 has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-gold">
           <input
             type="checkbox"
             checked={answers.consent}
             onChange={(e) => update({ consent: e.target.checked })}
             aria-describedby={error ? "consent-error" : undefined}
             aria-invalid={error ? true : undefined}
-            className="mt-0.5 size-7 shrink-0 cursor-pointer accent-ink"
+            className="mt-0.5 size-6 shrink-0 cursor-pointer accent-brand focus-visible:outline-none"
           />
           <span>
             I have read the privacy notice and I agree that ISPSC may use my answers as described.
@@ -456,8 +445,8 @@ function ListQuestion({
     return (
       <div className="grid gap-3" aria-busy="true">
         <p className="text-[17px] font-semibold">{legend}</p>
-        <Skeleton className="h-11 w-72" />
-        <Skeleton className="h-11 w-60" />
+        <Skeleton className="h-14 w-full max-w-[440px]" />
+        <Skeleton className="h-14 w-full max-w-[440px]" />
       </div>
     );
   }
@@ -575,9 +564,9 @@ function CheckStep({
 }) {
   const employed = answers.isEmployed === "yes";
   const Row = ({ term, value, step, field }: { term: string; value: ReactNode; step: Step; field: string }) => (
-    <div className="grid gap-1 border-b border-line py-3.5 sm:grid-cols-[38%_1fr_auto] sm:gap-4">
-      <dt className="font-semibold">{term}</dt>
-      <dd className="text-ink-2">{value}</dd>
+    <div className="grid grid-cols-[1fr_auto] gap-x-3 gap-y-1 border-b border-line py-3.5 text-[17px] sm:grid-cols-[38%_1fr_auto] sm:gap-4">
+      <dt className="col-span-full font-semibold sm:col-span-1">{term}</dt>
+      <dd className="min-w-0 text-ink-2 [overflow-wrap:anywhere]">{value}</dd>
       <dd>
         <Link to={`/survey?step=${step}&from=check`} className="text-link">
           Change<span className="sr-only"> {field}</span>
@@ -635,13 +624,21 @@ function Done() {
     headingRef.current?.focus();
   }, []);
   return (
-    <SiteLayout>
-      <div className="max-w-[640px]">
-        <div className="rounded-md bg-brand px-6 py-9 text-center text-white sm:px-10">
-          <h1 ref={headingRef} tabIndex={-1} className="text-[32px] leading-tight font-bold outline-none sm:text-[40px]">
+    <SurveyShell step="done">
+        <div className="grid gap-3 rounded-lg border-2 border-[#bbe5c9] bg-ok-50 p-7">
+          <span aria-hidden="true" className="grid size-11 place-items-center rounded-full bg-ok text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]">
+              <path d="M5 12.5 10 17l9-10" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="text-[32px] leading-tight font-bold tracking-[-0.02em] outline-none sm:text-[40px]"
+          >
             Survey complete
           </h1>
-          <p className="mt-3 text-[19px] text-[#f5dde2]">Thank you for answering the graduate tracer survey.</p>
+          <p className="text-[19px] text-[#14532d]">Thank you for answering the graduate tracer survey.</p>
         </div>
         <h2 className="mt-10 text-[24px] font-bold">What happens next</h2>
         <p className="mt-3 text-[19px] text-ink-2">
@@ -656,8 +653,7 @@ function Done() {
             Back to the start page
           </Link>
         </p>
-      </div>
-    </SiteLayout>
+    </SurveyShell>
   );
 }
 

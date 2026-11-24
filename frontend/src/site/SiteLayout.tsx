@@ -34,8 +34,17 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
       <main id="main" tabIndex={-1} className="mx-auto w-[min(100%-32px,1040px)] flex-1 pt-8 pb-20 outline-none sm:pt-10">
         {children}
       </main>
-      <footer className="border-t border-line bg-band">
-        <div className="mx-auto grid w-[min(100%-32px,1040px)] gap-3 py-8 text-[15px] text-muted-foreground sm:flex sm:items-center sm:justify-between">
+      <SiteFooter />
+    </div>
+  );
+}
+
+/** The public footer: service line, privacy and staff links, and an optional photo credit. */
+export function SiteFooter({ credit }: { credit?: ReactNode }) {
+  return (
+    <footer className="border-t border-line bg-band">
+      <div className="mx-auto grid w-[min(100%-32px,1040px)] gap-3 py-8 text-[15px] text-muted-foreground">
+        <div className="grid gap-3 sm:flex sm:items-center sm:justify-between">
           <p>Ilocos Sur Polytechnic State College · Sta. Maria campus · MIS office</p>
           <ul className="flex flex-wrap gap-x-5 gap-y-1">
             <li>
@@ -50,8 +59,9 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             </li>
           </ul>
         </div>
-      </footer>
-    </div>
+        {credit && <p className="text-[13px] text-faint">{credit}</p>}
+      </div>
+    </footer>
   );
 }
 

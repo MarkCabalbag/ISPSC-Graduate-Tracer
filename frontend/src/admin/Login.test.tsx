@@ -9,6 +9,7 @@ import LoginPage from "./Login";
 const renderLogin = (login: AuthContextValue["login"]) => {
   const value: AuthContextValue = {
     isAuthenticated: false,
+    username: null,
     isLoading: false,
     login,
     logout: vi.fn(),
@@ -50,6 +51,18 @@ describe("Admin login page", () => {
     await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => expect(login).toHaveBeenCalledWith("admin", "secret"));
+  });
+
+  it("shows and hides the password from the button inside the field", async () => {
+    renderLogin(vi.fn());
+    const input = screen.getByLabelText("Password");
+
+    await userEvent.click(screen.getByRole("button", { name: "Show password" }));
+    expect(input).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: "Hide password" })).toHaveAttribute("aria-pressed", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "Hide password" }));
+    expect(input).toHaveAttribute("type", "password");
   });
 
   it("says plainly when the username or password is wrong", async () => {

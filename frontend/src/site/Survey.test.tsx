@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
@@ -57,6 +57,42 @@ describe("graduate survey", () => {
     expect(summary).toHaveTextContent("Enter an email address in the correct format, like name@example.com");
     expect(summary).toHaveTextContent("Select the year you graduated");
     expect(screen.getByLabelText("Full name")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  it("marks the current step in the step rail", () => {
+    sessionStorage.setItem("ispsc-tracer-survey", JSON.stringify({ consent: true }));
+    renderAt("about");
+
+    const rail = screen.getByRole("list", { name: "Survey steps" });
+    expect(within(rail).getByText("About you").closest("li")).toHaveAttribute("aria-current", "step");
+    expect(within(rail).getByText("Before you start").closest("li")).not.toHaveAttribute("aria-current");
+  });
+
+  it("picks an answer by clicking its tile and opens the job questions", async () => {
+    sessionStorage.setItem(
+      "ispsc-tracer-survey",
+      JSON.stringify({
+        consent: true,
+        fullName: "Juan Dela Cruz",
+        email: "juan@example.com",
+        yearOfGraduation: "2024",
+        departmentId: "1",
+        programId: "7",
+      }),
+    );
+    renderAt("work");
+
+    const employed = screen.getByRole("group", { name: "Are you currently employed?" });
+    await userEvent.click(within(employed).getByText("Yes"));
+
+    expect(within(employed).getByRole("radio", { name: "Yes" })).toBeChecked();
+    expect(screen.getByRole("group", { name: "Is your job related to the course you took?" })).toBeInTheDocument();
+  });
+
+  it("thanks the graduate on the completion screen", () => {
+    renderAt("done");
+
+    expect(screen.getByRole("heading", { level: 1, name: "Survey complete" })).toHaveFocus();
   });
 
   it("sends a non-employed graduate's job questions as not applicable", async () => {

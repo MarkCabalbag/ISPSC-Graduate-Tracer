@@ -194,6 +194,30 @@
   transform-origin: left;
   animation: bar-grow 600ms var(--ease-out) both;
 }
+/* sign-in: the campus photo settles once on load */
+.photo-settle {
+  animation: photo-settle 1.6s var(--ease-out) both;
+}
+@keyframes photo-settle {
+  from { transform: scale(1.05); }
+}
+/* start page hero: legibility scrim over the Santa Maria photo (the one other gradient DESIGN.md allows) */
+.hero-scrim {
+  background: linear-gradient(
+    to top,
+    rgb(17 24 39 / 0.92) 0%,
+    rgb(17 24 39 / 0.78) 45%,
+    rgb(17 24 39 / 0.3) 75%,
+    rgb(17 24 39 / 0.5) 100%
+  );
+}
+@media (min-width: 48rem) {
+  .hero-scrim {
+    background:
+      linear-gradient(to right, rgb(17 24 39 / 0.82) 0%, rgb(17 24 39 / 0.62) 42%, rgb(17 24 39 / 0.08) 72%),
+      linear-gradient(to top, rgb(17 24 39 / 0.55) 0%, rgb(17 24 39 / 0) 40%, rgb(17 24 39 / 0) 75%, rgb(17 24 39 / 0.45) 100%);
+  }
+}
 @keyframes bar-rise {
   from { transform: scaleY(0); }
 }

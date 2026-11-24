@@ -55,10 +55,12 @@ const MIN_RECHECK_INTERVAL_MS = 30_000;
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<Status>("loading");
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const lastCheckRef = useRef(0);
 
   const markSignedOut = useCallback(() => {
     setExpiresAt(null);
+    setUsername(null);
     setStatus("anonymous");
   }, []);
 
@@ -69,6 +71,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const result = await client.auth.getSession();
       setExpiresAt(result.expiresAt);
+      setUsername(result.username);
       setStatus("authenticated");
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -82,11 +85,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [markSignedOut]);
 
-  const login = useCallback(async (username: string, password: string) => {
-    const result = await client.auth.login(username, password);
+  const login = useCallback(async (user: string, password: string) => {
+    const result = await client.auth.login(user, password);
 
     lastCheckRef.current = Date.now();
     setExpiresAt(Date.now() + result.expiresIn * 1000);
+    setUsername(user);
     setStatus("authenticated");
   }, []);
 
@@ -144,10 +148,11 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       isAuthenticated: status === "authenticated",
       isLoading: status === "loading",
+      username,
       login,
       logout,
     }),
-    [status, login, logout],
+    [status, username, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

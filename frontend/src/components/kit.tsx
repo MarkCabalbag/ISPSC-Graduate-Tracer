@@ -6,6 +6,7 @@
 import {
   forwardRef,
   useId,
+  useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
@@ -156,6 +157,41 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 );
 TextField.displayName = "TextField";
 
+/** A password input with a Show/Hide button inside the field (GOV.UK pattern). */
+export const PasswordField = forwardRef<HTMLInputElement, Omit<TextFieldProps, "type">>(
+  ({ id: idProp, label, hint, error, width, className, ...rest }, ref) => {
+    const auto = useId();
+    const id = idProp ?? auto;
+    const [shown, setShown] = useState(false);
+    return (
+      <FieldShell id={id} label={label} hint={hint} error={error} className={className}>
+        <div className={cx("relative", width)}>
+          <input
+            ref={ref}
+            id={id}
+            type={shown ? "text" : "password"}
+            className={cx(controlClass(error), "pr-[76px]")}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy(id, hint, error)}
+            {...rest}
+          />
+          <button
+            type="button"
+            aria-controls={id}
+            aria-pressed={shown}
+            aria-label={shown ? "Hide password" : "Show password"}
+            onClick={() => setShown((value) => !value)}
+            className="absolute top-1.5 right-1.5 h-9 min-w-[60px] rounded-md px-2.5 text-[15px] font-semibold text-ink-2 transition-colors hover:bg-[#f3f4f6] hover:text-ink"
+          >
+            {shown ? "Hide" : "Show"}
+          </button>
+        </div>
+      </FieldShell>
+    );
+  },
+);
+PasswordField.displayName = "PasswordField";
+
 type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label: ReactNode;
   hint?: ReactNode;
@@ -216,7 +252,7 @@ export const Radios = ({
   const id = useId();
   return (
     <fieldset
-      className={cx("grid gap-3 border-0 p-0 m-0 min-w-0", error && "border-l-4 border-danger pl-4")}
+      className={cx("grid gap-2.5 border-0 p-0 m-0 min-w-0", error && "border-l-4 border-danger pl-4")}
       aria-describedby={describedBy(id, hint, error)}
     >
       <legend
@@ -240,14 +276,19 @@ export const Radios = ({
           {error}
         </p>
       )}
-      <div className={cx("grid gap-2", inline && "sm:grid-flow-col sm:auto-cols-max sm:gap-6")}>
+      <div className={cx("grid gap-2.5", inline && "sm:max-w-[440px] sm:grid-cols-2")}>
         {options.map((option) => {
           const optionId = `${id}-${option.value.replace(/\W+/g, "-")}`;
           return (
             <label
               key={option.value}
               htmlFor={optionId}
-              className="flex min-h-11 cursor-pointer items-start gap-3 py-1.5 text-[17px] text-ink"
+              className={cx(
+                "flex min-h-14 cursor-pointer items-center gap-3.5 rounded-md border-2 border-line-strong bg-white px-4 py-2.5",
+                "text-[17px] text-ink transition-colors hover:border-ink-2",
+                "has-checked:border-brand has-checked:bg-brand-50",
+                "has-focus-visible:outline-[3px] has-focus-visible:outline-offset-2 has-focus-visible:outline-gold",
+              )}
             >
               <input
                 id={optionId}
@@ -256,7 +297,7 @@ export const Radios = ({
                 value={option.value}
                 checked={value === option.value}
                 onChange={() => onChange(option.value)}
-                className="mt-0.5 size-7 shrink-0 cursor-pointer accent-ink"
+                className="size-[22px] shrink-0 cursor-pointer accent-brand focus-visible:outline-none"
               />
               <span className="grid">
                 <span>{option.label}</span>

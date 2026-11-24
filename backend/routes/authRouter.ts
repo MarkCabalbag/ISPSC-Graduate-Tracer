@@ -6,7 +6,7 @@
  *
  * | Method | Path       | Handler  | Notes                                      |
  * | ------ | ---------- | -------- | ------------------------------------------ |
- * | `POST` | `/login`   | `login`  | public, limited by `loginLimiter`          |
+ * | `POST` | `/login`   | `login`  | public, limited per IP and per username    |
  * | `POST` | `/logout`  | `logout` | public                                     |
  * | `GET`  | `/me`      | `me`     | admin (needs the session cookie)           |
  *
@@ -19,7 +19,7 @@
 
 import { Router } from "express";
 import authController from "../controllers/authController.js";
-import { loginLimiter } from "../middleware/rateLimiters.js";
+import { loginAccountLimiter, loginLimiter } from "../middleware/rateLimiters.js";
 import requireAdmin, { requireCsrfHeader } from "../middleware/requireAdmin.js";
 
 const authRouter = Router();
@@ -28,6 +28,7 @@ const authRouter = Router();
 authRouter.post(
   "/login",
   loginLimiter,
+  loginAccountLimiter,
   requireCsrfHeader,
   authController.login,
 );

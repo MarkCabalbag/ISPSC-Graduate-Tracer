@@ -1,5 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": true },
-  "include": ["server.ts", "app.ts", "src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+  "include": [
+    "server.ts",
+    "app.ts",
+    "src/**/*.ts",
+    "lib/**/*.ts",
+    "prisma/seed.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    "vitest.config.ts"
+  ]
 }

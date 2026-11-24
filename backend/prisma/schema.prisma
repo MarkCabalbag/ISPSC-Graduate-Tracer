@@ -15,7 +15,8 @@ datasource db {
 
 model Responses {
   id Int @id @default(autoincrement())
-  email String?
+  /// Lower-cased and trimmed on write. Unique so two submissions at the same moment cannot both be stored.
+  email String? @unique
   fullName String?
   yearOfGraduation Int?
   yearOfSurvey Int?
@@ -28,6 +29,9 @@ model Responses {
   isFurtherStudies String?
   typeOfOrganization String?
   currentJobLocated String?
+
+  @@index([yearOfGraduation, program])
+  @@index([department])
 }
 
 model Total {
@@ -36,6 +40,8 @@ model Total {
   program String?
   department String?
   totalGraduates Int? @default(0)
+
+  @@unique([yearOfGraduation, program], name: "year_program")
 }
 
 model Department {
@@ -50,6 +56,8 @@ model Program{
   relatedToDepartment Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   departmentId Int
   listOfMajor Major[]
+
+  @@index([departmentId])
 }
 
 model Major{
@@ -57,5 +65,21 @@ model Major{
   major String
   relatedToProgram Program @relation(fields: [programId], references: [id],  onDelete: Cascade)
   programId Int
+
+  @@index([programId])
+}
+
+/// An MIS office account that can sign in to the admin. Seeded from the
+/// ADMIN_USERNAME / ADMIN_PASSWORD_HASH environment variables (prisma/seed.ts),
+/// and managed afterwards with the admin CLI (scripts/admin.ts).
+model Admin {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  passwordHash String
+  displayName  String?
+  createdAt    DateTime  @default(now())
+  lastLoginAt  DateTime?
+  /// Raised to end every session of this admin at once (password reset, sign-out-all).
+  sessionVersion Int     @default(0)
 }
 

@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { logger } from "../lib/logger.js";
 
 /** Message sent for every unexpected error. It never contains error details. */
 export const SERVER_ERROR_MESSAGE =
@@ -17,6 +18,7 @@ export const sendServerError = (
   scope: string,
   error: unknown,
 ): void => {
-  console.error(`[${scope}] failed:`, error);
+  // `res.req.log` carries the request id; fall back for code outside a request.
+  (res.req?.log ?? logger).error({ err: error }, `[${scope}] failed`);
   res.status(500).json({ message: SERVER_ERROR_MESSAGE });
 };

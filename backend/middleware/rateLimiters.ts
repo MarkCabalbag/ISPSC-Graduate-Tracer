@@ -9,7 +9,8 @@
  * | Limiter          | Used for                    | Limit                 |
  * | ---------------- | --------------------------- | --------------------- |
  * | `generalLimiter` | every API route             | 300 requests / 15 min |
- * | `loginLimiter`   | admin login                 | 5 failures / 15 min   |
+ * | `loginLimiter`   | admin login, per IP         | 5 failures / 15 min   |
+ * | `loginAccountLimiter` | admin login, per username | 10 failures / 15 min |
  * | `surveyLimiter`  | survey submission           | 30 requests / hour    |
  *
  * `surveyLimiter` is generous on purpose: many graduates on a school network
@@ -17,9 +18,11 @@
  *
  * **Behind a proxy**
  *
- * If the server runs behind a proxy or host (Render, Railway, Nginx), set
- * `app.set("trust proxy", 1)` in `server.ts`. Otherwise every visitor looks
- * like the same IP and shares one limit.
+ * Set `TRUST_PROXY` to the number of proxies in front of the API: 2 on Render
+ * behind the Vercel `/api` rewrite, 1 on Render alone. A wrong number makes
+ * every visitor look like the same IP (too low) or lets a caller forge their
+ * address (too high). `loginAccountLimiter` also limits failures per username,
+ * so a forged address cannot be used to guess one account's password.
  *
  * @packageDocumentation
  */
@@ -48,6 +51,31 @@ export const loginLimiter = rateLimit({
   skipSuccessfulRequests: true,
   standardHeaders: "draft-7",
   legacyHeaders: false,
+  message: { message: "Too many login attempts. Please try again later." },
+});
+
+/**
+ * Limits failed logins per username, whatever the IP address. The per-IP limit
+ * alone can be sidestepped by changing the (forwarded) address, so one account
+ * could still be guessed at without end. Anyone can lock a username for 15
+ * minutes by failing 10 times; that is the accepted cost of bounding guessing.
+ */
+export const loginAccountLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const body = req.body as { username?: unknown } | undefined;
+    const name =
+      typeof body?.username === "string"
+        ? body.username.trim().toLowerCase().slice(0, 200)
+        : "";
+    return `login:${name}`;
+  },
+  // The key is the username, not an IP address.
+  validate: { keyGeneratorIpFallback: false },
   message: { message: "Too many login attempts. Please try again later." },
 });
 

@@ -2,8 +2,9 @@
  * Auth API controller for the Graduate Tracer module.
  *
  * @remarks
- * Lets the admin sign in, sign out and check the current session. There is one
- * admin account, kept in environment variables, so no database table is needed.
+ * Lets an admin sign in, sign out and check the current session. Admin accounts
+ * live in the `Admin` table. The first one is seeded from the environment
+ * (`prisma/seed.ts`); add or reset more with the admin CLI (`scripts/admin.ts`).
  *
  * **Endpoints**
  *
@@ -25,21 +26,20 @@
  *
  * **Environment variables**
  *
- * - `ADMIN_USERNAME`: the admin's username.
- * - `ADMIN_PASSWORD_HASH`: the bcrypt hash of the admin's password. Never store
- *   the password itself. Create the hash with
- *   `node -e "console.log(require('bcryptjs').hashSync('your-password', 12))"`
- *   and put it in single quotes in `.env`, because it contains `$` characters:
- *   `ADMIN_PASSWORD_HASH='$2b$12$...'`
  * - `JWT_SECRET`: see `requireAdmin`.
+ * - `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`: used only by `prisma/seed.ts` to
+ *   create the first admin. Login reads the `Admin` table, not these.
  * - `NODE_ENV`: set to `production` on the live server so the cookie is only
  *   sent over HTTPS.
  *
  * **Logging out and stolen tokens**
  *
- * `logout` removes the cookie in the browser. The server keeps no session list,
- * so a token copied before logout stays valid until it expires. To end every
- * session at once (for example after a leak), change `JWT_SECRET` and restart.
+ * `logout` removes the cookie in the browser only: a token copied before logout
+ * stays valid until it expires or is revoked. To end one admin's sessions at
+ * once (after a leak, a password reset or a departure) run
+ * `npm run admin:signout-all -- --username x` (or `admin:reset`, which does the
+ * same), or delete the admin. To end every admin's sessions, change `JWT_SECRET`
+ * and restart.
  *
  * **Debugging guide**
  *
@@ -56,8 +56,14 @@ import type { CookieOptions, Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { createHash, timingSafeEqual } from "crypto";
-import { ADMIN_COOKIE_NAME, getJwtSecret } from "../middleware/requireAdmin.js";
+import prisma from "../lib/prisma.js";
+import { env } from "../lib/env.js";
+import {
+  ADMIN_COOKIE_NAME,
+  JWT_AUDIENCE,
+  JWT_ISSUER,
+  getJwtSecret,
+} from "../middleware/requireAdmin.js";
 
 /* -------------------------------------------------------------------------- */
 /*                                  Constants                                 */
@@ -75,7 +81,7 @@ const MAX_CREDENTIAL_LENGTH = 200;
  */
 const cookieOptions = (): CookieOptions => ({
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
+  secure: env.NODE_ENV === "production",
   sameSite: "strict",
   path: "/api/graduateTracer",
 });
@@ -95,21 +101,12 @@ type LoginBody = {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Compares two texts in constant time.
- *
- * @remarks
- * Both texts are hashed first, so they always have the same length and the
- * comparison time does not reveal how many characters matched.
- *
- * @param a - The first text.
- * @param b - The second text.
- * @returns `true` if both texts are identical.
+ * A real bcrypt hash, computed once at startup. When the username is unknown,
+ * the password is still compared against this, so a wrong username takes the
+ * same time as a wrong password and the two cannot be told apart (no account
+ * enumeration).
  */
-const safeEqual = (a: string, b: string): boolean => {
-  const hashA = createHash("sha256").update(a).digest();
-  const hashB = createHash("sha256").update(b).digest();
-  return timingSafeEqual(hashA, hashB);
-};
+const DUMMY_HASH = bcrypt.hashSync("unused-placeholder", 12);
 
 /**
  * Checks that a value is a usable username or password.
@@ -175,27 +172,40 @@ const login = asyncHandler(
     }
 
     try {
-      const adminUsername = process.env.ADMIN_USERNAME;
-      const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
+      const admin = await prisma.admin.findUnique({ where: { username } });
 
-      if (!adminUsername || !adminPasswordHash) {
-        throw new Error("ADMIN_USERNAME or ADMIN_PASSWORD_HASH is not set");
-      }
+      // Always compare against a hash, even when the account does not exist, so
+      // the answer takes the same time and never reveals which part was wrong.
+      const passwordOk = await bcrypt.compare(
+        password,
+        admin?.passwordHash ?? DUMMY_HASH,
+      );
 
-      // Run both checks every time, so a wrong username is not faster to reject.
-      const passwordOk = await bcrypt.compare(password, adminPasswordHash);
-      const usernameOk = safeEqual(username, adminUsername);
-
-      if (!usernameOk || !passwordOk) {
+      if (!admin || !passwordOk) {
         res.status(401).json({ message: "Invalid username or password" });
         return;
       }
 
-      const token = jwt.sign({ role: "admin" }, getJwtSecret(), {
-        algorithm: "HS256",
-        expiresIn: SESSION_LIFETIME_SECONDS,
-        subject: adminUsername,
-      });
+      // Record the sign-in. A failure here must not block the login.
+      prisma.admin
+        .update({ where: { id: admin.id }, data: { lastLoginAt: new Date() } })
+        .catch((error: unknown) =>
+          req.log.error({ err: error }, "[auth.controller] lastLoginAt update failed"),
+        );
+
+      // `sv` ties the token to the admin's `sessionVersion`: raising it (password
+      // reset, sign-out-all) or deleting the admin ends this session at once.
+      const token = jwt.sign(
+        { role: "admin", username: admin.username, sv: admin.sessionVersion },
+        getJwtSecret(),
+        {
+          algorithm: "HS256",
+          expiresIn: SESSION_LIFETIME_SECONDS,
+          subject: String(admin.id),
+          issuer: JWT_ISSUER,
+          audience: JWT_AUDIENCE,
+        },
+      );
 
       res.cookie(ADMIN_COOKIE_NAME, token, {
         ...cookieOptions(),
@@ -206,8 +216,7 @@ const login = asyncHandler(
         .status(200)
         .json({ message: "Signed in", expiresIn: SESSION_LIFETIME_SECONDS });
     } catch (error) {
-      // Replace with your logger (pino, winston) if the project has one.
-      console.error("[auth.controller] login failed:", error);
+      req.log.error({ err: error }, "[auth.controller] login failed");
       res.status(500).json({
         message: "An unexpected error occurred. Please try again later.",
       });
@@ -244,6 +253,7 @@ const me = (_req: Request, res: Response): void => {
   res.status(200).json({
     authenticated: true,
     expiresAt: res.locals.adminExpiresAt as number,
+    username: (res.locals.adminUser as string | undefined) ?? null,
   });
 };
 

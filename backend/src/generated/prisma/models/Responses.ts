@@ -317,10 +317,10 @@ export type ResponsesOrderByWithRelationInput = {
 
 export type ResponsesWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  email?: string
   AND?: Prisma.ResponsesWhereInput | Prisma.ResponsesWhereInput[]
   OR?: Prisma.ResponsesWhereInput[]
   NOT?: Prisma.ResponsesWhereInput | Prisma.ResponsesWhereInput[]
-  email?: Prisma.StringNullableFilter<"Responses"> | string | null
   fullName?: Prisma.StringNullableFilter<"Responses"> | string | null
   yearOfGraduation?: Prisma.IntNullableFilter<"Responses"> | number | null
   yearOfSurvey?: Prisma.IntNullableFilter<"Responses"> | number | null
@@ -333,7 +333,7 @@ export type ResponsesWhereUniqueInput = Prisma.AtLeast<{
   isFurtherStudies?: Prisma.StringNullableFilter<"Responses"> | string | null
   typeOfOrganization?: Prisma.StringNullableFilter<"Responses"> | string | null
   currentJobLocated?: Prisma.StringNullableFilter<"Responses"> | string | null
-}, "id">
+}, "id" | "email">
 
 export type ResponsesOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -653,6 +653,9 @@ export type $ResponsesPayload<ExtArgs extends runtime.Types.Extensions.InternalA
   objects: {}
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: number
+    /**
+     * Lower-cased and trimmed on write. Unique so two submissions at the same moment cannot both be stored.
+     */
     email: string | null
     fullName: string | null
     yearOfGraduation: number | null

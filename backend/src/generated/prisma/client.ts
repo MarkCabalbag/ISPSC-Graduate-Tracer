@@ -66,3 +66,10 @@ export type Program = Prisma.ProgramModel
  * 
  */
 export type Major = Prisma.MajorModel
+/**
+ * Model Admin
+ * An MIS office account that can sign in to the admin. Seeded from the
+ * ADMIN_USERNAME / ADMIN_PASSWORD_HASH environment variables (prisma/seed.ts),
+ * and managed afterwards with the admin CLI (scripts/admin.ts).
+ */
+export type Admin = Prisma.AdminModel

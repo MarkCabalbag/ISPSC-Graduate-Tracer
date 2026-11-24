@@ -39,9 +39,12 @@
  */
 
 import path from "path";
+import { existsSync } from "node:fs";
 import nodemailer from "nodemailer";
 import type Mail from "nodemailer/lib/mailer/index.js";
 import hbs from "nodemailer-express-handlebars";
+import { env } from "../lib/env.js";
+import { logger } from "../lib/logger.js";
 
 /* -------------------------------------------------------------------------- */
 /*                                  Constants                                 */
@@ -88,20 +91,40 @@ export type EmailResult = {
 /*                                  Transporter                               */
 /* -------------------------------------------------------------------------- */
 
-const emailUser = process.env.EMAIL_FROM;
-const emailPass = process.env.EMAIL_PASS;
+const emailUser = env.EMAIL_FROM;
+const emailPass = env.EMAIL_PASS;
 
 if (!emailUser || !emailPass) {
-  console.error(
-    "[email] EMAIL_FROM or EMAIL_PASS is not set. Emails will not be sent.",
-  );
+  logger.warn("[email] EMAIL_FROM or EMAIL_PASS is not set. Emails will not be sent.");
 }
 
-/** Shared mail transporter. */
+// A missing template folder or logo would fail every email at send time. Say so once at startup.
+for (const required of [
+  LOGO_PATH,
+  path.resolve("utils/templates/layouts"),
+  path.resolve("utils/templates/partials"),
+  path.resolve("utils/templates/emails"),
+]) {
+  if (!existsSync(required)) {
+    logger.warn(
+      { path: path.relative(process.cwd(), required) },
+      "[email] A template file or folder is missing. Start the server from the backend folder.",
+    );
+  }
+}
+
+/**
+ * Shared mail transporter. The timeouts keep a slow mail server from holding
+ * connections open; `service: "gmail"` sets the host, port and TLS.
+ */
 const transporter = nodemailer.createTransport({
-  port: 465,
-  secure: true,
   service: "gmail",
+  pool: true,
+  maxConnections: 2,
+  maxMessages: 50,
+  connectionTimeout: 10_000,
+  greetingTimeout: 10_000,
+  socketTimeout: 20_000,
   auth: {
     user: emailUser,
     pass: emailPass,
@@ -148,7 +171,7 @@ transporter.use(
  *   "Thank you for being part of the tracer survey",
  *   "student-completed-form",
  * );
- * if (!result.success) console.error(result.message);
+ * if (!result.success) logger.error(result.message);
  * ```
  */
 export const sendGraduateTracerEmail = async (
@@ -185,13 +208,13 @@ export const sendGraduateTracerEmail = async (
 
     const info = await transporter.sendMail(mailOptions);
 
-    console.log("[email] Sent successfully, accepted:", info.accepted.length);
+    logger.info({ accepted: info.accepted.length }, "[email] Sent successfully");
     return { success: true, message: "Email sent successfully!" };
   } catch (error) {
     // Log only the error name/code: the full error can contain the recipient address.
-    console.error(
-      "[email] Failed to send email:",
-      error instanceof Error ? error.name : "unknown error",
+    logger.error(
+      { errorName: error instanceof Error ? error.name : "unknown error" },
+      "[email] Failed to send email",
     );
     return { success: false, message: "Failed to send email." };
   }

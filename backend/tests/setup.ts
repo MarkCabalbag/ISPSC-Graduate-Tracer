@@ -16,3 +16,6 @@ process.env.ADMIN_USERNAME = TEST_ADMIN_USERNAME;
 // Cost 4 keeps the tests fast; production uses 12.
 process.env.ADMIN_PASSWORD_HASH = bcrypt.hashSync(TEST_ADMIN_PASSWORD, 4);
 process.env.CLIENT_URL = "http://localhost:5173";
+// Two proxies in front of the API in production (Vercel, then Render): the client
+// IP is the first X-Forwarded-For entry, so a test can act as several visitors.
+process.env.TRUST_PROXY = "2";

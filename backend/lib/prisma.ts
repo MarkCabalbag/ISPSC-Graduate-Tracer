@@ -37,8 +37,16 @@ import { PrismaPg } from "@prisma/adapter-pg";
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is not set");
 
+// Pool limits: a runaway query is killed after 10 s instead of holding a
+// connection, and a database that cannot be reached fails in 5 s instead of hanging.
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString }),
+  adapter: new PrismaPg({
+    connectionString,
+    max: 10,
+    connectionTimeoutMillis: 5_000,
+    idleTimeoutMillis: 30_000,
+    statement_timeout: 10_000,
+  }),
 });
 
 export default prisma;

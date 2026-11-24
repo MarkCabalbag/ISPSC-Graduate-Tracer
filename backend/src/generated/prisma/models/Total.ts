@@ -236,6 +236,7 @@ export type TotalOrderByWithRelationInput = {
 
 export type TotalWhereUniqueInput = Prisma.AtLeast<{
   id?: number
+  year_program?: Prisma.TotalYear_programCompoundUniqueInput
   AND?: Prisma.TotalWhereInput | Prisma.TotalWhereInput[]
   OR?: Prisma.TotalWhereInput[]
   NOT?: Prisma.TotalWhereInput | Prisma.TotalWhereInput[]
@@ -243,7 +244,7 @@ export type TotalWhereUniqueInput = Prisma.AtLeast<{
   program?: Prisma.StringNullableFilter<"Total"> | string | null
   department?: Prisma.StringNullableFilter<"Total"> | string | null
   totalGraduates?: Prisma.IntNullableFilter<"Total"> | number | null
-}, "id">
+}, "id" | "year_program">
 
 export type TotalOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -320,6 +321,11 @@ export type TotalUncheckedUpdateManyInput = {
   program?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   department?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   totalGraduates?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+}
+
+export type TotalYear_programCompoundUniqueInput = {
+  yearOfGraduation: number
+  program: string
 }
 
 export type TotalCountOrderByAggregateInput = {

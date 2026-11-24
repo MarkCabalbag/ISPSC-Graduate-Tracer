@@ -55,7 +55,8 @@ export const ModelName = {
   Total: 'Total',
   Department: 'Department',
   Program: 'Program',
-  Major: 'Major'
+  Major: 'Major',
+  Admin: 'Admin'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -129,6 +130,19 @@ export const MajorScalarFieldEnum = {
 } as const
 
 export type MajorScalarFieldEnum = (typeof MajorScalarFieldEnum)[keyof typeof MajorScalarFieldEnum]
+
+
+export const AdminScalarFieldEnum = {
+  id: 'id',
+  username: 'username',
+  passwordHash: 'passwordHash',
+  displayName: 'displayName',
+  createdAt: 'createdAt',
+  lastLoginAt: 'lastLoginAt',
+  sessionVersion: 'sessionVersion'
+} as const
+
+export type AdminScalarFieldEnum = (typeof AdminScalarFieldEnum)[keyof typeof AdminScalarFieldEnum]
 
 
 export const SortOrder = {

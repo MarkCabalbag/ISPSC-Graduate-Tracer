@@ -1,9 +1,9 @@
 /**
- * Server entry point for the Graduate Tracer API.
+ * The Express app for the Graduate Tracer API (`server.ts` starts it on a port;
+ * tests import it without opening one).
  *
  * @remarks
- * Creates the Express app, registers the middleware and the routers, and starts
- * listening.
+ * Creates the Express app, registers the middleware and the routers.
  *
  * **Routes**
  *
@@ -11,61 +11,66 @@
  *
  * | Router             | Path                           |
  * | ------------------ | ------------------------------ |
+ * | `healthRouter`     | `/api/graduateTracer/health`     |
+ * | `authRouter`       | `/api/graduateTracer/auth`       |
  * | `departmentRouter` | `/api/graduateTracer/department` |
  * | `programRouter`    | `/api/graduateTracer/program`    |
  * | `majorRouter`      | `/api/graduateTracer/major`      |
  * | `userRouter`       | `/api/graduateTracer/user`       |
  * | `adminRouter`      | `/api/graduateTracer/admin`      |
  *
- * **Environment variables**
+ * **Configuration**
  *
- * - `PORT`: the port to listen on. Defaults to `7000` when it is missing or not
- *   a valid port number. (The original code printed `undefined` in the startup
- *   message when `PORT` was not set. The message now shows the port that is
- *   really used.)
- * - Variables are loaded from the `.env` file by `dotenv/config`, which must be
- *   imported before any file that reads `process.env` (for example the email
- *   helper).
+ * All settings come from `lib/env.ts`, which validates them once at startup and
+ * stops the server with a clear message (names only, never values) if one is
+ * missing or unsafe. `dotenv/config` must be imported before it, which this file does.
  *
  * **Errors**
  *
  * Unknown paths answer `404` and uncaught errors answer `500`, both as JSON, so
- * clients never receive an HTML error page or a stack trace.
+ * clients never receive an HTML error page or a stack trace. A body over 100 KB
+ * answers `413`, and a body that is not valid JSON answers `400`.
+ *
+ * **Logging**
+ *
+ * One JSON line per request (pino), with a request id that is also sent back in
+ * the `X-Request-Id` header. Query strings, cookies and personal data are never
+ * logged (see `lib/logger.ts`).
  *
  * **Security**
  *
- * - `helmet()` adds the standard protective HTTP headers.
+ * - `helmet()` adds the protective HTTP headers, with a CSP that allows nothing
+ *   (this API only returns JSON and CSV).
  * - CORS only allows the frontend addresses in `CLIENT_URL` (comma separated).
- *   If it is not set, only `http://localhost:5173` is allowed.
  * - Request bodies are limited to 100 KB.
- * - `generalLimiter` limits every API route per IP address.
+ * - `generalLimiter` limits every API route per IP address (behind the Vercel
+ *   rewrite and Render, `TRUST_PROXY=2` makes that the visitor's real address).
  * - Admin routes and the write routes need the session cookie set by
  *   `/auth/login` (see `requireAdmin`). The cookie is `HttpOnly` and
  *   `SameSite=Strict`, and data-changing requests must also carry the
  *   `X-Requested-With` header. CORS allows credentials only for the origins in
- *   `CLIENT_URL`. The server will not start without a valid `JWT_SECRET`.
- *
- * **Environment variables used for security**
- *
- * `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`, `CLIENT_URL`,
- * `NODE_ENV` (set to `production` on the live server, so the cookie is sent
- * over HTTPS only) and `TRUST_PROXY` (set to `1` behind a proxy or host).
+ *   `CLIENT_URL`.
  *
  * @packageDocumentation
  */
 
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import express from "express";
 import type { NextFunction, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
+import { pinoHttp } from "pino-http";
+import { env } from "./lib/env.js";
+import { logger } from "./lib/logger.js";
 import authRouter from "./routes/authRouter.js";
 import { generalLimiter } from "./middleware/rateLimiters.js";
 import { getJwtSecret } from "./middleware/requireAdmin.js";
 import noStore from "./middleware/noStore.js";
 import auditLog from "./middleware/auditLog.js";
-import { assertEnvironment } from "./lib/env.js";
+import { SERVER_ERROR_MESSAGE } from "./utils/httpErrors.js";
+import healthRouter from "./routes/healthRouter.js";
 import departmentRouter from "./routes/departmentRouter.js";
 import programRouter from "./routes/programRouter.js";
 import majorRouter from "./routes/majorRouter.js";
@@ -79,56 +84,84 @@ import adminRouter from "./routes/adminRouter.js";
 /** Start of every API path. */
 const BASE_URL = "/api/graduateTracer";
 
-/* -------------------------------------------------------------------------- */
-/*                                   Helpers                                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Reads the allowed frontend addresses from the environment.
- *
- * @param value - The raw `CLIENT_URL` value. Several addresses can be separated
- * by commas, for example `"https://tracer.ispsc.edu.ph,http://localhost:5173"`.
- * @returns The list of allowed origins. When `CLIENT_URL` is not set, only the
- * local Vite address (`http://localhost:5173`) is allowed, so a missing setting
- * never opens the API to every website.
- */
-const parseAllowedOrigins = (value: string | undefined): string[] => {
-  const origins = (value ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter((origin) => origin !== "");
-
-  return origins.length > 0 ? origins : ["http://localhost:5173"];
-};
+/** A request id sent by a proxy is only trusted if it is short and plain. */
+const SAFE_REQUEST_ID = /^[A-Za-z0-9._-]{8,64}$/;
 
 /* -------------------------------------------------------------------------- */
 /*                                     App                                    */
 /* -------------------------------------------------------------------------- */
 
-// Stop the server at startup if required settings are missing or malformed.
-assertEnvironment();
+// `lib/env.ts` already validated every setting when it was imported. This also
+// stops the server at startup if the signing secret is unusable.
 getJwtSecret();
 
 const app = express();
 
-// Behind a proxy or host (Render, Railway, Nginx), set TRUST_PROXY=1 in .env so
-// the rate limits see each visitor's real IP address and not the proxy's.
-if (process.env.TRUST_PROXY) {
-  app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+// How many proxies sit in front of the API: 2 on Render behind the Vercel
+// rewrite (Vercel, then Render's load balancer), 1 on Render alone. Too low and
+// every visitor shares one rate limit; too high and a caller can forge an IP.
+if (env.TRUST_PROXY !== undefined) {
+  app.set("trust proxy", env.TRUST_PROXY);
 }
 
-app.use(helmet());
+app.use(
+  pinoHttp({
+    logger,
+    genReqId: (req, res) => {
+      const incoming = req.headers["x-request-id"];
+      const id =
+        typeof incoming === "string" && SAFE_REQUEST_ID.test(incoming)
+          ? incoming
+          : randomUUID();
+      res.setHeader("X-Request-Id", id);
+      return id;
+    },
+    // Health checks run every few seconds; they would drown the log.
+    autoLogging: { ignore: (req) => (req.url ?? "").includes("/health") },
+    serializers: {
+      // Never log the query string or the headers.
+      req: (req) => ({
+        id: req.id,
+        method: req.method,
+        url: (req.url as string).split("?")[0],
+      }),
+    },
+  }),
+);
+
+app.use(
+  helmet({
+    // This API returns JSON and CSV only: nothing may load or frame anything.
+    contentSecurityPolicy: {
+      useDefaults: false,
+      directives: {
+        defaultSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'none'"],
+        formAction: ["'none'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: "same-site" },
+    referrerPolicy: { policy: "no-referrer" },
+  }),
+);
 app.use(
   cors({
-    origin: parseAllowedOrigins(process.env.CLIENT_URL),
+    origin: env.CLIENT_URL,
     methods: ["GET", "POST", "DELETE"],
     allowedHeaders: ["Content-Type", "X-Requested-With"],
     // Lets the browser send the admin session cookie. This is safe only because
     // the origins above are an explicit list, never "*".
     credentials: true,
+    // Browsers may cache the preflight answer for 10 minutes.
+    maxAge: 600,
   }),
 );
-app.use(express.json({ limit: "100kb" }));
+
+// Before the rate limiter: a health check must never use up anyone's quota.
+app.use(`${BASE_URL}/health`, healthRouter);
+
+app.use(express.json({ limit: "100kb", strict: true }));
 app.use(cookieParser());
 app.use(BASE_URL, generalLimiter);
 app.use(BASE_URL, auditLog);
@@ -150,33 +183,36 @@ app.use((_req: Request, res: Response) => {
 });
 
 /**
- * Answers `500` for every error that reached Express (for example a body that
- * is not valid JSON, or an error thrown outside a controller's own `try/catch`).
+ * Answers for every error that reached Express: a body that is too large
+ * (`413`), a body that is not valid JSON (`400`), or an error thrown outside a
+ * controller's own `try/catch` (`500`).
  *
  * @remarks
  * Express recognizes an error handler by its four parameters, so `_next` must
  * stay even though it is not used. Search the log for `[server]` to find the
- * original error.
+ * original error; `requestId` matches it to the request.
  */
-app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+app.use((error: unknown, req: Request, res: Response, _next: NextFunction) => {
   const status =
     typeof error === "object" &&
     error !== null &&
     "status" in error &&
-    error.status === 400
-      ? 400
+    typeof error.status === "number"
+      ? error.status
       : 500;
 
-  if (status === 400) {
+  if (status === 413) {
+    res.status(413).json({ message: "The request body is too large" });
+    return;
+  }
+
+  if (status >= 400 && status < 500) {
     res.status(400).json({ message: "The request body is not valid" });
     return;
   }
 
-  // Replace with your logger (pino, winston) if the project has one.
-  console.error("[server] Unhandled error:", error);
-  res
-    .status(500)
-    .json({ message: "An unexpected error occurred. Please try again later." });
+  req.log.error({ err: error }, "[server] Unhandled error");
+  res.status(500).json({ message: SERVER_ERROR_MESSAGE });
 });
 
 export default app;

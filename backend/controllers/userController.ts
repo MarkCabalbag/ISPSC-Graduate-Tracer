@@ -54,7 +54,9 @@ import type { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import { Prisma } from "../src/generated/prisma/client.js";
 import prisma from "../lib/prisma.js";
+import { logger } from "../lib/logger.js";
 import { sendServerError } from "../utils/httpErrors.js";
+import { answersAreConsistent } from "../utils/surveyValues.js";
 import {
   sendGraduateTracerEmail,
   type EmailContext,
@@ -70,9 +72,11 @@ const MAX_TEXT_LENGTH = 150;
 /** Longest value accepted for an email address. */
 const MAX_EMAIL_LENGTH = 254;
 
-/** Earliest and latest year accepted for the survey and graduation years. */
+/** Earliest graduation year accepted. */
 const MIN_YEAR = 1900;
-const MAX_YEAR = 2100;
+
+/** Message for a duplicate email, the same on both the pre-check and the database path. */
+const ALREADY_TRACED_MESSAGE = "This email is already traced! Thank you";
 
 /** Subject of the thank-you email. */
 const EMAIL_SUBJECT = "Thank you for being part of the tracer survey";
@@ -139,12 +143,13 @@ const parseId = (value: unknown): number | null => {
  * Converts a body value to a year.
  *
  * @param value - The raw value, for example `2024` or `"2024"`.
- * @returns The year, or `null` if it is not a whole number between `MIN_YEAR`
- * and `MAX_YEAR`.
+ * @param min - Earliest accepted year.
+ * @param max - Latest accepted year.
+ * @returns The year, or `null` if it is not a whole number from `min` to `max`.
  */
-const parseYear = (value: unknown): number | null => {
+const parseYear = (value: unknown, min: number, max: number): number | null => {
   const year = parseId(value);
-  return year !== null && year >= MIN_YEAR && year <= MAX_YEAR ? year : null;
+  return year !== null && year >= min && year <= max ? year : null;
 };
 
 /**
@@ -235,7 +240,9 @@ const handleError = (
     }
 
     if (error.code === "P2002") {
-      res.status(409).json({ message: "This graduate is already traced" });
+      // Two submissions with the same email at the same moment: the unique index
+      // rejected the second. Same text as the pre-check, so the two cannot be told apart.
+      res.status(409).json({ message: ALREADY_TRACED_MESSAGE });
       return;
     }
 
@@ -247,7 +254,6 @@ const handleError = (
     }
   }
 
-  // Replace with your logger (pino, winston) if the project has one.
   sendServerError(res, `user.controller ${handlerName}`, error);
 };
 
@@ -269,18 +275,15 @@ const ensureTotalExists = async (
   department: string,
 ): Promise<void> => {
   try {
-    const existing = await prisma.total.findFirst({
-      where: { yearOfGraduation, program },
-      select: { id: true },
+    // One atomic statement on the unique (year, program) index: two graduates
+    // submitting at once cannot create two totals. An existing total is untouched.
+    await prisma.total.upsert({
+      where: { year_program: { yearOfGraduation, program } },
+      update: {},
+      create: { yearOfGraduation, program, department },
     });
-
-    if (!existing) {
-      await prisma.total.create({
-        data: { yearOfGraduation, program, department },
-      });
-    }
   } catch (error) {
-    console.error("[user.controller] ensureTotalExists failed:", error);
+    logger.error({ err: error }, "[user.controller] ensureTotalExists failed");
   }
 };
 
@@ -301,11 +304,15 @@ const ensureTotalExists = async (
  * exist, and the major must exist when `majorId` is sent.
  *
  * After the response is saved, the graduate total for the graduation year and
- * program is created if it does not exist yet, and a thank-you email is sent.
- * Problems with the total or the email are logged but do not change the answer.
- * For full protection against two submissions arriving at the same time, also
- * add a unique constraint on the email in `schema.prisma`. This handler already
- * turns that database error into a `409`.
+ * program is created if it does not exist yet (one `upsert` on the unique year +
+ * program index), the `201` answer is sent, and only then the thank-you email is
+ * sent in the background. Problems with the total or the email are logged but do
+ * not change the answer. Two submissions with the same email at the same moment
+ * are stopped by the unique index on `Responses.email`; that database error is
+ * answered with the same `409` as the pre-check.
+ *
+ * The answers must be the values the form sends (`utils/surveyValues.ts`), the
+ * program must belong to the department and the major to the program.
  *
  * **Responses:** `201` with a thank-you message. `400` if a field is missing or
  * invalid. `404` if the department, program or major does not exist. `409` if
@@ -342,8 +349,10 @@ const addResponse = asyncHandler(
   ) => {
     const body = req.body ?? {};
 
-    const yearOfSurvey = parseYear(body.yearOfSurvey);
-    const yearOfGraduation = parseYear(body.yearOfGraduation);
+    // The form sends this year as the survey year and offers 1980 to this year.
+    const thisYear = new Date().getFullYear();
+    const yearOfSurvey = parseYear(body.yearOfSurvey, thisYear - 1, thisYear + 1);
+    const yearOfGraduation = parseYear(body.yearOfGraduation, MIN_YEAR, thisYear);
     const email = parseEmail(body.email);
     const fullName = parseText(body.fullName);
     const departmentId = parseId(body.departmentId);
@@ -367,7 +376,16 @@ const addResponse = asyncHandler(
       isSelfEmployed === null ||
       isFurtherStudies === null ||
       typeOfOrganization === null ||
-      currentJobLocated === null
+      currentJobLocated === null ||
+      // Only the values the form sends, consistent with each other (see surveyValues.ts).
+      !answersAreConsistent({
+        isEmployed,
+        isJobAligned,
+        isSelfEmployed,
+        isFurtherStudies,
+        typeOfOrganization,
+        currentJobLocated,
+      })
     ) {
       res.status(400).json({ message: "Please fill all fields" });
       return;
@@ -391,9 +409,7 @@ const addResponse = asyncHandler(
       // Do not show the saved name: this route is public, so anyone could
       // otherwise look up whose name belongs to an email address.
       if (alreadyTraced) {
-        res
-          .status(409)
-          .json({ message: "This email is already traced! Thank you" });
+        res.status(409).json({ message: ALREADY_TRACED_MESSAGE });
         return;
       }
 
@@ -416,6 +432,15 @@ const addResponse = asyncHandler(
         return;
       }
 
+      // The form's lists only offer the programs of the chosen college; a
+      // different combination can only come from a forged request.
+      if (program.departmentId !== department.id) {
+        res.status(400).json({
+          message: "The program does not belong to the selected department",
+        });
+        return;
+      }
+
       let majorName: string | undefined;
       if (majorId !== null) {
         const major = await prisma.major.findUnique({ where: { id: majorId } });
@@ -423,6 +448,13 @@ const addResponse = asyncHandler(
         if (!major) {
           res.status(404).json({
             message: `The major with id ${majorId} does not exist`,
+          });
+          return;
+        }
+
+        if (major.programId !== program.id) {
+          res.status(400).json({
+            message: "The major does not belong to the selected program",
           });
           return;
         }
@@ -454,29 +486,28 @@ const addResponse = asyncHandler(
         department.department,
       );
 
-      // The response is already saved: an email failure must not undo it.
-      // sendGraduateTracerEmail never throws; it reports failure in its result.
+      res.status(201).json({
+        message: `Thank you ${newResponse.fullName} for being part of this tracing!`,
+      });
+
+      // The response is saved and answered: the graduate does not wait for the mail
+      // server, and an email failure cannot undo or delay it. sendGraduateTracerEmail
+      // never throws; it reports failure in its result.
       const context: EmailContext = {
         fullName: fullName.toUpperCase(),
         date: new Date().getFullYear(),
       };
 
-      const emailResult = await sendGraduateTracerEmail(
-        email,
-        context,
-        EMAIL_SUBJECT,
-        EMAIL_TEMPLATE,
+      void sendGraduateTracerEmail(email, context, EMAIL_SUBJECT, EMAIL_TEMPLATE).then(
+        (emailResult) => {
+          if (!emailResult.success) {
+            req.log.warn(
+              { reason: emailResult.message },
+              "[user.controller] addResponse confirmation email not sent",
+            );
+          }
+        },
       );
-
-      if (!emailResult.success) {
-        console.error(
-          `[user.controller] addResponse confirmation email not sent: ${emailResult.message}`,
-        );
-      }
-
-      res.status(201).json({
-        message: `Thank you ${newResponse.fullName} for being part of this tracing!`,
-      });
     } catch (error) {
       handleError(res, "addResponse", error);
     }

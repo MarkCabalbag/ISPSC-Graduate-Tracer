@@ -83,16 +83,30 @@ npm run dev                 # http://localhost:5173
 
 The frontend calls `http://localhost:8080/api/graduateTracer` in development, so set `PORT=8080` in `backend/.env`.
 
-### Create the admin account
+### Create the admin accounts
 
-There is a single admin, configured through environment variables. Generate the password hash and a session secret:
+Admins live in the `Admin` database table. Generate a session secret and the first admin's password hash:
 
 ```bash
-node -e "console.log(require('bcryptjs').hashSync('your-strong-password', 12))"
-node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"   # JWT_SECRET
+node -e "console.log(require('bcryptjs').hashSync('your-strong-password', 12))"   # ADMIN_PASSWORD_HASH
 ```
 
-Put the hash in `ADMIN_PASSWORD_HASH` (wrap it in single quotes) and the random text in `JWT_SECRET`.
+Put the random text in `JWT_SECRET`, the hash in `ADMIN_PASSWORD_HASH` (single-quoted) and a name in `ADMIN_USERNAME`. Then, after the migration has run (see [Database](#database)), seed the first admin:
+
+```bash
+npm run seed            # creates the admin from ADMIN_USERNAME / ADMIN_PASSWORD_HASH (once; never overwrites)
+```
+
+Manage admins afterwards (the environment variables are no longer used):
+
+```bash
+npm run admin:list
+npm run admin:create -- --username mis.jane --password "a-strong-password" --name "Jane Cruz"
+npm run admin:create -- --username mis.jane --hash '$2b$12$...'   # keep the plain password out of shell history
+npm run admin:reset  -- --username mis.jane --password "a-new-password"
+npm run admin:delete -- --username mis.jane                       # refuses to delete the last admin
+```
 
 ## Environment variables
 
@@ -103,15 +117,15 @@ Put the hash in `ADMIN_PASSWORD_HASH` (wrap it in single quotes) and the random 
 | `DATABASE_URL` | yes | PostgreSQL connection string used by the API |
 | `DIRECT_URL` | for migrations | Direct (non-pooled) connection string used by the Prisma CLI |
 | `JWT_SECRET` | yes | At least 32 random characters; signs admin sessions |
-| `ADMIN_USERNAME` | yes | Admin username |
-| `ADMIN_PASSWORD_HASH` | yes | bcrypt hash of the admin password (never the password) |
+| `ADMIN_USERNAME` | to seed | First admin's username. Read only by `npm run seed`, not by the server |
+| `ADMIN_PASSWORD_HASH` | to seed | bcrypt hash of the first admin's password. Read only by `npm run seed` |
 | `CLIENT_URL` | yes in production | Exact frontend origin(s), comma separated, no trailing slash |
 | `PORT` | no | Defaults to 7000 |
 | `NODE_ENV` | production | Set to `production` so the cookie is HTTPS-only |
 | `TRUST_PROXY` | behind a proxy | Set to `1` on Render so rate limits see real client IPs |
 | `EMAIL_FROM`, `EMAIL_PASS` | for emails | Gmail address and app password |
 
-The server refuses to start if a required variable is missing or `ADMIN_PASSWORD_HASH` is not a bcrypt hash.
+The server refuses to start if `DATABASE_URL` or `JWT_SECRET` is missing. The admin credentials are validated by the seed, not at startup, so the server runs without them once admins exist in the table.
 
 ### Frontend (`frontend/.env.local`)
 
@@ -141,7 +155,8 @@ The schema is in `backend/prisma/schema.prisma`. Apply it to an empty database w
 - Root directory: `backend`
 - Build command: `npm install && npm run build`
 - Start command: `npm start`
-- Set every backend variable above, with `NODE_ENV=production`, `TRUST_PROXY=1` and `CLIENT_URL` set to the Vercel site URL.
+- Set every backend variable above, with `NODE_ENV=production`, `TRUST_PROXY=2` and `CLIENT_URL` set to the Vercel site URL (https, no trailing slash). `2` because two proxies sit in front of the API: Vercel (the `/api` rewrite), then Render. The server refuses to start in production without `TRUST_PROXY`, an https `CLIENT_URL`, and `?sslmode=require` on a `DATABASE_URL` that is reached over the internet.
+- Health Check Path (Render → Settings): `/api/graduateTracer/health`.
 
 ### Frontend (Vercel)
 
@@ -149,6 +164,20 @@ The schema is in `backend/prisma/schema.prisma`. Apply it to an empty database w
 - `frontend/vercel.json` forwards `/api/*` to the Render backend and sends every other path to `index.html` (single-page app routing). It also sets security headers including a Content-Security-Policy. If you move the backend to another domain, update the `destination` in the rewrite **and** `connect-src` in the CSP.
 - Set `VITE_API_URL=/api/graduateTracer` so the browser only talks to the Vercel domain. The admin session cookie is `SameSite=Strict`; calling the Render domain directly would make it cross-site and break admin sign-in.
 - Redeploy after changing environment variables (they are baked in at build time).
+
+## Operations
+
+### Uptime and keep-alive
+
+A free Render web service spins down after 15 minutes without traffic, and the next request then waits 30–60 seconds. An external monitor (UptimeRobot) calls the API every 5 minutes to prevent that and to alert when the API is down.
+
+- Account: `<MIS office email>` (login in the team's password manager). **Fill this in when the monitors are created.**
+- Monitor 1, `https://ispsc-graduate-tracer.onrender.com/api/graduateTracer/health`: keeps the service awake and alerts if the API is down. Answers `200 {"status":"ok"}` without touching the database.
+- Monitor 2, `…/api/graduateTracer/health/ready`: alerts if the database is unreachable (`503` otherwise).
+- Both: GET, every 5 minutes, 60-second timeout (a cold start is slow), alert after 2 failed checks. Ping the Render URL directly, not the Vercel one.
+- Health requests skip the rate limiter and the request log, so they never use up a visitor's quota or fill the logs.
+- Free Render instances share 750 free hours a month across the workspace; one always-awake service uses about 744. Do not keep a second free service awake in the same workspace.
+- If the Render URL changes, update both monitors and `frontend/vercel.json`. On a paid Render instance the service never sleeps, so the keep-alive is no longer needed; keep the monitors for alerting.
 
 ## Security notes
 

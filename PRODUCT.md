@@ -39,10 +39,17 @@ The college's own tracer, built around CHED's tracer questions and the college's
 - The college's colours are maroon and gold (assumed from the seal and the existing site; confirm with the college).
 - The user rejected the earlier stock shadcn look and a first "Campus pride" maroon-and-gold mockup as generic.
 - Chosen in the decision round (2026-11-20): **the category standard, executed at full craft** — conventions embraced, no smuggled quirk. Quality bar: **GOV.UK / GOV.PH services** for the graduate survey and **Vercel Dashboard** for the admin. Maroon `#7d1128` is the single accent; Source Sans 3 throughout.
+- Survey redesign chosen 2026-11-24: **Option C · Guided split**. The `/survey` steps sit in a dark step rail plus a white question pane, which becomes a dark step bar on phones. Answers are tappable tiles, and the green "Survey complete" panel replaces the maroon block. The start page and privacy notice keep the GOV.UK service frame. The questions, wording, validation and API stay unchanged. Build recipe: `DESIGN.md` (Layout › Survey, Components › Answer tiles, Survey shell, Done panel).
+- Start page redesign chosen 2026-11-24: **Option C · Santa Maria hero**.
+  - **Hero:** a full-width photo of Nuestra Señora de la Asunción Church in Santa Maria, with the title, intro and Start now over a dark scrim.
+  - **Below it:** the survey's three steps as a numbered list, then Before you start and the contacts on white.
+  - **Unchanged:** every sentence and link stays the same. The photo is the town's landmark and the alt text says so; it is never called the campus.
+  - **Build recipe:** `DESIGN.md` (Layout › Start page, Components › Start now button, Step list, `SiteFooter`, Elevation › gradients).
 
 ## Evidence on Hand
 
 - Real: the college seal and logos in `frontend/src/assets/`; licensed Wikimedia Commons photographs of Santa Maria, Ilocos Sur (the church and its stairway) found during design.
+- Used on the start page: "Side Facade of Nuestra Senora Dela Asuncion Church, Santa Maria, Ilocos Sur.jpg" by Luzviminda7641, **CC0**, https://commons.wikimedia.org/wiki/File:Side_Facade_of_Nuestra_Senora_Dela_Asuncion_Church,_Santa_Maria,_Ilocos_Sur.jpg. It is credited in the start page footer.
 - Not real: `ispsc_campus_hero.jpg` is a generic campus scene that is not ISPSC; never present it as the college. `bg.jpg` is an aerial with a "Candonian Pride" watermark, likely another campus.
 - No real figures, testimonials or response counts. Any numbers in previews are sample data and must be labelled as such.
 

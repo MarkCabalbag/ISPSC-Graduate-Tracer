@@ -31,10 +31,28 @@ jobs:
           cache: npm
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
+      - run: npx prisma validate
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # Reports high-severity advisories in the production dependencies. It does not
+      # block yet: today's three are in Prisma's build tooling (`effect` via
+      # `@prisma/config`), not a runtime path. Remove `continue-on-error` once Prisma
+      # ships a release that fixes them (see backend-hardening plan, Phase 10).
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   frontend:
     name: Frontend

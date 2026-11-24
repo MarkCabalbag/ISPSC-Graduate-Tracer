@@ -20,3 +20,6 @@ dist-ssr/
 # Local tooling
 .claude/
 graphify-out/
+
+.github/
+.impeccable/
